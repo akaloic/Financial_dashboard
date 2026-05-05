@@ -7,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 from statsmodels.stats.stattools import durbin_watson
 
 _AVERTISSEMENT = (
-    "⚠️ Avertissement : Ce modèle de régression linéaire est fourni à titre pédagogique. "
+    "Ce modèle de régression linéaire est fourni à titre pédagogique. "
     "Un R² élevé sur une série temporelle financière reflète une tendance commune, non une "
     "capacité prédictive réelle. Les résidus sont autocorrélés, ce qui invalide les hypothèses "
     "classiques de l'OLS. Ne pas utiliser cette projection pour des décisions d'investissement."
