@@ -53,9 +53,6 @@ body::before {
   --tilt-x: 0deg; --tilt-y: 0deg;
   --hot: 0; --edge: 0;
   position: relative; isolation: isolate;
-  transform: perspective(1200px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateZ(0);
-  transform-style: preserve-3d;
-  transition: transform 420ms cubic-bezier(.22,.8,.16,1);
 }
 .glass {
   background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
@@ -90,6 +87,14 @@ body::before {
   opacity: calc(var(--edge) * 1); transition: opacity 280ms ease; z-index: 2;
 }
 .glass > *, .glass-strong > * { position: relative; z-index: 3; }
+
+/* All glass elements tilt — very subtly, only while hovered */
+.glass, .glass-strong {
+  transform: perspective(1200px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  will-change: transform;
+}
+/* Sticky header must never shift position */
+.app-header.glass { transform: none; will-change: auto; }
 
 @media (prefers-reduced-motion: reduce) {
   .glass, .glass-strong { transform: none !important; transition: none !important; }
@@ -182,9 +187,8 @@ body::before {
 
 /* ── ETF grid ── */
 .etf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
-.etf-card { padding: 20px; cursor: pointer; transition: transform 260ms cubic-bezier(.2,.8,.2,1), box-shadow 260ms ease, border-color 200ms ease; position: relative; overflow: hidden; }
-.etf-card::before { content: ""; position: absolute; top: 0; left: 10%; right: 10%; height: 1px; background: linear-gradient(90deg, transparent, rgba(90,200,250,0.55), transparent); }
-.etf-card:hover { transform: translateY(-4px); box-shadow: 0 24px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.28); border-color: rgba(255,255,255,0.22); }
+.etf-card { padding: 20px; cursor: pointer; transition: box-shadow 260ms ease, border-color 200ms ease; position: relative; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.32), inset 0 1px 0 rgba(90,200,250,0.22), inset 0 -1px 0 rgba(255,255,255,0.04); }
+.etf-card:hover { box-shadow: 0 24px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(90,200,250,0.40), inset 0 -1px 0 rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.22); }
 .etf-card.selected { border-color: rgba(10,132,255,0.55) !important; box-shadow: 0 16px 48px rgba(10,132,255,0.22), inset 0 1px 0 rgba(255,255,255,0.24); }
 .etf-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .etf-ticker { font-family: 'JetBrains Mono', monospace; font-size: 13px; padding: 4px 9px; border-radius: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); letter-spacing: 0.04em; }
@@ -350,6 +354,7 @@ table.tbl tr:hover td { background: rgba(255,255,255,0.03); }
 }
 .brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .brand-icon { font-size: 18px; color: #6366f1; }
+.brand-icon-svg { color: #6366f1; flex-shrink: 0; }
 .brand-name { font-size: 15px; font-weight: 600; letter-spacing: -0.02em; white-space: nowrap; }
 .brand-badge {
   font-size: 10px; padding: 2px 7px; border-radius: 999px;
@@ -380,7 +385,10 @@ table.tbl tr:hover td { background: rgba(255,255,255,0.03); }
 }
 .nav-tab:hover { color: var(--text-secondary); }
 .nav-tab.active { color: #fff; }
+.nav-tab.active .tab-icon-svg { color: #a5b4fc; }
 .tab-icon { font-size: 14px; }
+.tab-icon-svg { color: var(--text-muted); transition: color 180ms ease; flex-shrink: 0; }
+.nav-tab:hover .tab-icon-svg { color: var(--text-secondary); }
 .tab-label {}
 
 /* ── Screen ── */

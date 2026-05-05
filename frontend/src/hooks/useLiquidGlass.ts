@@ -1,68 +1,99 @@
 import { useEffect, useRef } from 'react'
 
-interface Spring {
-  value: number
-  velocity: number
-  target: number
+// Very subtle tilt — only when cursor is directly over the element.
+// No neighbor counter-tilt (that's what caused the "abnormal" movement).
+const TILT_MAX   = 1   // degrees max — barely perceptible, feels premium
+const STIFFNESS  = 0.08  // very lazy spring → slow, smooth
+const DAMPING    = 0.82  // high damping → no oscillation
+const HOT_SPEED  = 0.12
+
+interface State {
+  tx: number; ty: number
+  vx: number; vy: number
+  ttx: number; tty: number
+  hot: number; thot: number
+  edge: number; tedge: number
+  mx: number; my: number
 }
 
-function spring(s: Spring, stiffness = 0.12, damping = 0.72): void {
-  const force = (s.target - s.value) * stiffness
-  s.velocity = s.velocity * damping + force
-  s.value += s.velocity
-}
+const mkState = (): State => ({
+  tx: 0, ty: 0, vx: 0, vy: 0, ttx: 0, tty: 0,
+  hot: 0, thot: 0, edge: 0, tedge: 0,
+  mx: 50, my: 50,
+})
 
-export function useLiquidGlass(selector = '.glass, .glass-strong') {
+export function useLiquidGlass() {
   const rafRef = useRef<number>(0)
 
   useEffect(() => {
-    const cards: {
-      el: HTMLElement
-      mx: Spring
-      my: Spring
-      hot: Spring
-    }[] = []
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    const states = new WeakMap<HTMLElement, State>()
+    let elements: HTMLElement[] = []
+    let mouseX = -9999
+    let mouseY = -9999
+
+    const get = (el: HTMLElement) => {
+      if (!states.has(el)) states.set(el, mkState())
+      return states.get(el)!
+    }
 
     const rebuild = () => {
-      cards.length = 0
-      document.querySelectorAll<HTMLElement>(selector).forEach(el => {
-        cards.push({
-          el,
-          mx: { value: 0.5, velocity: 0, target: 0.5 },
-          my: { value: 0.5, velocity: 0, target: 0.5 },
-          hot: { value: 0, velocity: 0, target: 0 },
-        })
-      })
+      elements = Array.from(
+        document.querySelectorAll<HTMLElement>('.glass, .glass-strong')
+      )
+      elements.forEach(get)
     }
 
     const onMove = (e: MouseEvent | TouchEvent) => {
-      const cx = e instanceof MouseEvent ? e.clientX : e.touches[0].clientX
-      const cy = e instanceof MouseEvent ? e.clientY : e.touches[0].clientY
-
-      cards.forEach(c => {
-        const r = c.el.getBoundingClientRect()
-        const nx = (cx - r.left) / r.width
-        const ny = (cy - r.top) / r.height
-        const inBounds = nx > -0.2 && nx < 1.2 && ny > -0.2 && ny < 1.2
-        c.mx.target = inBounds ? nx : 0.5
-        c.my.target = inBounds ? ny : 0.5
-        c.hot.target = inBounds ? 1 : 0
-      })
+      mouseX = e instanceof MouseEvent ? e.clientX : e.touches[0].clientX
+      mouseY = e instanceof MouseEvent ? e.clientY : e.touches[0].clientY
     }
 
     const loop = () => {
-      cards.forEach(c => {
-        spring(c.mx)
-        spring(c.my)
-        spring(c.hot)
-        const tx = (c.mx.value - 0.5) * 12
-        const ty = (c.my.value - 0.5) * 8
-        c.el.style.setProperty('--mx', String(c.mx.value))
-        c.el.style.setProperty('--my', String(c.my.value))
-        c.el.style.setProperty('--tilt-x', String(ty))
-        c.el.style.setProperty('--tilt-y', String(tx))
-        c.el.style.setProperty('--hot', String(c.hot.value))
-      })
+      for (const el of elements) {
+        const s = get(el)
+        const r = el.getBoundingClientRect()
+
+        // Normalised cursor position within the element (0–100%)
+        const px = ((mouseX - r.left) / r.width)  * 100
+        const py = ((mouseY - r.top)  / r.height) * 100
+        const over = px >= 0 && px <= 100 && py >= 0 && py <= 100
+
+        if (over) {
+          // Tilt toward cursor: rotateY on horizontal axis, rotateX on vertical
+          s.tty = (px - 50) / 50 * TILT_MAX
+          s.ttx = -((py - 50) / 50) * TILT_MAX
+          s.mx  = px
+          s.my  = py
+          s.thot  = 1
+          s.tedge = 1
+        } else {
+          // Cursor left: spring back to flat
+          s.ttx = 0
+          s.tty = 0
+          s.thot  = 0
+          s.tedge = 0
+        }
+
+        // Spring integration
+        s.vx = (s.vx + (s.ttx - s.tx) * STIFFNESS) * DAMPING
+        s.vy = (s.vy + (s.tty - s.ty) * STIFFNESS) * DAMPING
+        s.tx += s.vx
+        s.ty += s.vy
+
+        // Hotspot / edge shimmer smooth
+        s.hot  += (s.thot  - s.hot)  * HOT_SPEED
+        s.edge += (s.tedge - s.edge) * HOT_SPEED
+
+        el.style.setProperty('--mx',     s.mx.toFixed(2) + '%')
+        el.style.setProperty('--my',     s.my.toFixed(2) + '%')
+        el.style.setProperty('--tilt-x', s.tx.toFixed(3) + 'deg')
+        el.style.setProperty('--tilt-y', s.ty.toFixed(3) + 'deg')
+        el.style.setProperty('--hot',    s.hot.toFixed(3))
+        el.style.setProperty('--edge',   s.edge.toFixed(3))
+      }
+
       rafRef.current = requestAnimationFrame(loop)
     }
 
@@ -80,5 +111,5 @@ export function useLiquidGlass(selector = '.glass, .glass-strong') {
       window.removeEventListener('touchmove', onMove)
       obs.disconnect()
     }
-  }, [selector])
+  }, [])
 }

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { BarChart2, TrendingUp, Activity, BookOpen, Layers } from 'lucide-react'
 import { useLiquidGlass } from './hooks/useLiquidGlass'
 import ETFExplorer from './pages/ModuleA/ETFExplorer'
 import DCASimulator from './pages/ModuleB/DCASimulator'
@@ -6,11 +7,11 @@ import OLSRegression from './pages/ModuleC/OLSRegression'
 import Documentation from './pages/Documentation'
 import type { TabId } from './types'
 
-const TABS: { id: TabId; label: string; icon: string }[] = [
-  { id: 'explorer', label: 'Explorer', icon: '◎' },
-  { id: 'dca', label: 'Simulateur DCA', icon: '◈' },
-  { id: 'ols', label: 'Régression OLS', icon: '◇' },
-  { id: 'doc', label: 'Documentation', icon: '◻' },
+const TABS: { id: TabId; label: string; Icon: React.ElementType }[] = [
+  { id: 'explorer',  label: 'Explorer',        Icon: BarChart2   },
+  { id: 'dca',       label: 'Simulateur DCA',   Icon: TrendingUp  },
+  { id: 'ols',       label: 'Régression OLS',   Icon: Activity    },
+  { id: 'doc',       label: 'Documentation',    Icon: BookOpen    },
 ]
 
 export default function App() {
@@ -30,28 +31,22 @@ export default function App() {
     setPillStyle({ left: btnRect.left - navRect.left, width: btnRect.width })
   }, [])
 
-  useEffect(() => {
-    updatePill(activeTab)
-  }, [activeTab, updatePill])
+  useEffect(() => { updatePill(activeTab) }, [activeTab, updatePill])
 
   useEffect(() => {
-    const handleResize = () => updatePill(activeTab)
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    const onResize = () => updatePill(activeTab)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
   }, [activeTab, updatePill])
-
-  const handleTabClick = (id: TabId) => {
-    setActiveTab(id)
-  }
 
   return (
     <div className="app-layout">
       <header className="app-header glass">
         <div className="header-inner">
           <div className="brand">
-            <span className="brand-icon">◈</span>
+            <Layers size={18} strokeWidth={1.5} className="brand-icon-svg" />
             <span className="brand-name">Portefeuille Passif</span>
-            <span className="brand-badge">M2 MIAGE</span>
+            {/* <span className="brand-badge">M2 MIAGE</span> */}
           </div>
           <nav className="nav-tabs" ref={navRef} role="tablist">
             <span
@@ -59,17 +54,17 @@ export default function App() {
               style={{ transform: `translateX(${pillStyle.left}px)`, width: pillStyle.width }}
               aria-hidden="true"
             />
-            {TABS.map(tab => (
+            {TABS.map(({ id, label, Icon }) => (
               <button
-                key={tab.id}
+                key={id}
                 role="tab"
-                aria-selected={activeTab === tab.id}
-                className={`nav-tab${activeTab === tab.id ? ' active' : ''}`}
-                onClick={() => handleTabClick(tab.id)}
-                ref={el => { if (el) btnRefs.current.set(tab.id, el) }}
+                aria-selected={activeTab === id}
+                className={`nav-tab${activeTab === id ? ' active' : ''}`}
+                onClick={() => setActiveTab(id)}
+                ref={el => { if (el) btnRefs.current.set(id, el) }}
               >
-                <span className="tab-icon">{tab.icon}</span>
-                <span className="tab-label">{tab.label}</span>
+                <Icon size={15} strokeWidth={1.8} className="tab-icon-svg" />
+                <span className="tab-label">{label}</span>
               </button>
             ))}
           </nav>
@@ -77,18 +72,19 @@ export default function App() {
       </header>
 
       <main className="app-main">
-        <div className={`screen${activeTab === 'explorer' ? ' screen-active' : ''}`} role="tabpanel" hidden={activeTab !== 'explorer'}>
-          <ETFExplorer />
-        </div>
-        <div className={`screen${activeTab === 'dca' ? ' screen-active' : ''}`} role="tabpanel" hidden={activeTab !== 'dca'}>
-          <DCASimulator />
-        </div>
-        <div className={`screen${activeTab === 'ols' ? ' screen-active' : ''}`} role="tabpanel" hidden={activeTab !== 'ols'}>
-          <OLSRegression />
-        </div>
-        <div className={`screen${activeTab === 'doc' ? ' screen-active' : ''}`} role="tabpanel" hidden={activeTab !== 'doc'}>
-          <Documentation />
-        </div>
+        {TABS.map(({ id }) => (
+          <div
+            key={id}
+            className={`screen${activeTab === id ? ' screen-active' : ''}`}
+            role="tabpanel"
+            hidden={activeTab !== id}
+          >
+            {id === 'explorer'  && <ETFExplorer />}
+            {id === 'dca'       && <DCASimulator />}
+            {id === 'ols'       && <OLSRegression />}
+            {id === 'doc'       && <Documentation />}
+          </div>
+        ))}
       </main>
     </div>
   )
