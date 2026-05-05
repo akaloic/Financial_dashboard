@@ -1,0 +1,7 @@
+ticker,nom,indice,gestionnaire,ter,eligible_pea,devise
+CW8.PA,Amundi MSCI World,MSCI World,Amundi,0.0012,true,EUR
+RS2K.PA,Amundi Russell 2000,Russell 2000,Amundi,0.0035,true,EUR
+ESE.PA,Amundi S&P 500 ESG,S&P 500 ESG,Amundi,0.0015,true,EUR
+OBLI.PA,Lyxor Euro Govt Bond,Bloomberg Euro Govt Bond,Lyxor,0.0017,true,EUR
+PANX.PA,Amundi PEA Nasdaq-100,Nasdaq-100,Amundi,0.0023,true,EUR
+PAEEM.PA,Amundi PEA MSCI Emerging Markets,MSCI Emerging Markets,Amundi,0.002,true,EUR
