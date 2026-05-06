@@ -5,3 +5,14 @@ ESE.PA,Amundi S&P 500 ESG,S&P 500 ESG,Amundi,0.0015,true,EUR
 OBLI.PA,Lyxor Euro Govt Bond,Bloomberg Euro Govt Bond,Lyxor,0.0017,true,EUR
 PANX.PA,Amundi PEA Nasdaq-100,Nasdaq-100,Amundi,0.0023,true,EUR
 PAEEM.PA,Amundi PEA MSCI Emerging Markets,MSCI Emerging Markets,Amundi,0.002,true,EUR
+PUST.PA,Amundi PEA S&P 500,S&P 500,Amundi,0.0015,true,EUR
+CSX5.PA,Amundi ETF CAC 40,CAC 40,Amundi,0.0025,true,EUR
+PCEU.PA,Amundi PEA MSCI Europe,MSCI Europe,Amundi,0.0015,true,EUR
+VWCE.DE,Vanguard FTSE All-World,FTSE All-World,Vanguard,0.0022,false,EUR
+SXR8.DE,iShares Core S&P 500,S&P 500,iShares,0.0007,false,EUR
+EUNL.DE,iShares Core MSCI World,MSCI World,iShares,0.0020,false,EUR
+IUSN.DE,iShares Nasdaq 100,Nasdaq 100,iShares,0.0033,false,EUR
+AGGH.AS,iShares Global Aggregate Bond,Global Aggr Bond,iShares,0.0010,false,EUR
+SPY,SPDR S&P 500 ETF,S&P 500,State Street,0.0009,false,USD
+QQQ,Invesco QQQ Trust,Nasdaq-100,Invesco,0.0020,false,USD
+GLD,SPDR Gold Shares,Gold Price,State Street,0.0040,false,USD
