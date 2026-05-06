@@ -59,3 +59,8 @@ from routers import etf, simulation, regression
 app.include_router(etf.router, prefix="/etf", tags=["ETF"])
 app.include_router(simulation.router, prefix="/simulation", tags=["Simulation DCA"])
 app.include_router(regression.router, prefix="/regression", tags=["Régression OLS"])
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
