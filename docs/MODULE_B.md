@@ -1,79 +1,72 @@
-# docs/MODULE_B.md — Module B : Simulateur DCA (Backtesting)
+# Module B — Simulateur DCA (Backtesting)
 
-## Objectif
+Simuler une stratégie d'investissement passif en DCA (Dollar-Cost Averaging)
+sur un ETF, avec déduction mensuelle du TER, métriques de performance et
+comparaison avec le Livret A.
 
-Simuler une stratégie d'investissement passif en DCA (Dollar-Cost Averaging) sur un ETF donné, avec déduction mensuelle des frais de gestion (TER), affichage des métriques de performance et comparaison avec le Livret A.
-
----
-
-## Paramètres d'entrée (formulaire utilisateur)
+## Paramètres d'entrée
 
 | Paramètre | Type | Exemple | Contraintes |
 |---|---|---|---|
-| `etf_ticker` | string | "CW8.PA" | ETF présent en BDD |
+| `etf_ticker` | string | `"CW8.PA"` | ETF présent en BDD |
 | `capital_initial` | float | 1000.0 | ≥ 0 |
 | `versement_mensuel` | float | 200.0 | > 0 |
-| `date_debut` | date | "2015-01-01" | Doit avoir des cours disponibles |
-| `date_fin` | date | "2024-12-31" | > date_debut |
-| `ter` | float | 0.0012 | ≥ 0, < 1 (valeur décimale, ex: 0.12% → 0.0012) |
+| `date_debut` | date | `"2015-01-01"` | Doit avoir des cours disponibles |
+| `date_fin` | date | `"2024-12-31"` | > date_debut |
+| `ter` | float | 0.0012 | ≥ 0, < 1 (valeur décimale, ex 0.12 % = 0.0012) |
 
----
-
-## Algorithme DCA pas à pas
+## Algorithme
 
 ```
 POUR chaque mois dans [date_debut, date_fin] :
 
   1. Récupérer le prix de clôture ajusté du 1er jour de trading du mois
-     → prix = adj_close du premier jour ouvré du mois
+     prix = adj_close du premier jour ouvré du mois
 
   2. Calculer les parts achetées ce mois :
-     → Si mois == 1 ET capital_initial > 0 :
-           parts_achetees = (capital_initial + versement_mensuel) / prix
-       Sinon :
-           parts_achetees = versement_mensuel / prix
+     Si mois == 1 ET capital_initial > 0 :
+         parts_achetees = (capital_initial + versement_mensuel) / prix
+     Sinon :
+         parts_achetees = versement_mensuel / prix
 
   3. Cumuler les parts :
-     → parts_cumulees += parts_achetees
+     parts_cumulees += parts_achetees
 
   4. Calculer la valeur brute (avant TER) :
-     → valeur_brute = parts_cumulees * prix
+     valeur_brute = parts_cumulees * prix
 
-  5. Appliquer le TER mensuel (formule exacte) :
-     → valeur_nette = valeur_brute * (1 - TER / 12)
-     Note : les parts sont ajustées en conséquence
-     → parts_cumulees = valeur_nette / prix
+  5. Appliquer le TER mensuel :
+     valeur_nette = valeur_brute * (1 - TER / 12)
+     parts_cumulees = valeur_nette / prix    (ajustement des parts)
 
   6. Mettre à jour le capital investi :
-     → capital_investi += versement_mensuel (+ capital_initial au mois 1)
+     capital_investi += versement_mensuel (+ capital_initial au mois 1)
 
   7. Stocker la ligne en BDD (resultat_simulation)
 
 FIN POUR
-
-RETOURNER : liste de résultats mensuels + métriques
 ```
 
-### Formules clés
+### Formules
 
-**TER mensuel :**
+TER mensuel :
 ```
 valeur_nette(n) = valeur_brute(n) × (1 - TER / 12)
 ```
 
-**CAGR (Compound Annual Growth Rate) :**
+CAGR (Compound Annual Growth Rate) :
 ```
 CAGR = (valeur_finale / capital_total_verse) ^ (1 / nb_annees) - 1
 ```
-où `nb_annees = (date_fin - date_debut).days / 365.25`
+avec `nb_annees = (date_fin - date_debut).days / 365.25`.
 
-**Livret A (comparaison) :**
-- Taux fixe actuel : **3 % annuel** → `0.03 / 12` mensuel
+Livret A (référence sans risque) :
+- Taux fixe actuel : 3 % annuel, soit `0.03 / 12` mensuel
 - Calcul : `valeur_livret(n) = valeur_livret(n-1) × (1 + 0.03/12) + versement_mensuel`
 
----
+## Implémentation Python
 
-## Implémentation Python (backend/services/dca_engine.py)
+`backend/services/dca_engine.py` :
 
 ```python
 import pandas as pd
@@ -92,11 +85,9 @@ def run_dca_simulation(
     Exécute le backtesting DCA mois par mois.
     Retourne une liste de dict (un par mois simulé).
     """
-    # Filtrer la période
     mask = (prix_df.index >= pd.Timestamp(date_debut)) & (prix_df.index <= pd.Timestamp(date_fin))
     df = prix_df[mask].copy()
 
-    # Grouper par mois, prendre le premier jour de trading
     df['ym'] = df.index.to_period('M')
     monthly = df.groupby('ym').first()
 
@@ -115,9 +106,8 @@ def run_dca_simulation(
         capital_investi += apport
 
         valeur_brute = parts_cumulees * prix
-        # Application du TER mensuel
         valeur_nette = valeur_brute * (1 - ter / 12)
-        parts_cumulees = valeur_nette / prix  # ajustement des parts
+        parts_cumulees = valeur_nette / prix
 
         results.append({
             "mois": i + 1,
@@ -134,15 +124,15 @@ def run_dca_simulation(
 
 
 def compute_cagr(valeur_finale: float, capital_total: float, nb_annees: float) -> float:
-    """Calcule le CAGR. Retourne 0.0 si les paramètres sont invalides."""
+    """Calcule le CAGR. Retourne 0 si paramètres invalides."""
     if capital_total <= 0 or nb_annees <= 0 or valeur_finale <= 0:
         return 0.0
     return (valeur_finale / capital_total) ** (1 / nb_annees) - 1
 ```
 
----
+## Tests pytest
 
-## Tests pytest obligatoires (backend/tests/test_dca.py)
+`backend/tests/test_dca.py` — minimum 3 tests, voir critères d'évaluation.
 
 ```python
 import pytest
@@ -150,9 +140,9 @@ import pandas as pd
 from datetime import date
 from services.dca_engine import run_dca_simulation, compute_cagr
 
-# Fixture : cours fictifs constants à 100 € sur 12 mois
 @pytest.fixture
 def prix_constants():
+    """Cours fictifs constants à 100 € sur 252 jours ouvrés."""
     idx = pd.date_range("2020-01-02", periods=252, freq="B")
     return pd.DataFrame({"adj_close": [100.0] * 252}, index=idx)
 
@@ -184,30 +174,30 @@ def test_cagr_invalide():
     assert compute_cagr(1000, 0, 5) == 0.0
 ```
 
----
+## Affichage frontend
 
-## Affichage frontend attendu
-
-1. **Courbe portefeuille** : valeur_nette (avec TER) vs valeur_brute (sans TER) vs Livret A — même graphique, 3 séries
-2. **Tableau récapitulatif** (par mois ou par an) : date, capital investi, valeur nette, gain/perte en €
-3. **Métriques synthèse** :
-   - Capital total investi
-   - Valeur finale (avec et sans frais)
-   - Gain net en € et en %
-   - CAGR (avec et sans TER)
-   - Durée de simulation
-
----
+1. Courbe portefeuille : `valeur_nette` (avec TER), `valeur_brute` (sans TER) et Livret A — même graphique, 3 séries
+2. Tableau récapitulatif par mois ou par an : date, capital investi, valeur nette, gain/perte en €
+3. Métriques synthèse : capital total investi, valeur finale (avec et sans frais), gain net en € et en %, CAGR (avec et sans TER), durée de la simulation
 
 ## Critères d'évaluation liés à ce module
 
-- **Application fonctionnelle (6 pts)** : simulation fonctionnelle avec vraies données, TER bien appliqué.
-- **Qualité technique (3 pts)** : tests pytest couvrant les cas limites.
+- Application fonctionnelle (6 pts) : simulation correcte avec vraies données, TER appliqué
+- Qualité technique (3 pts) : tests pytest couvrant les cas limites
 
-## Erreurs fréquentes à éviter
+## Points d'attention
 
-- Appliquer le TER sur le **capital investi** au lieu de la **valeur du portefeuille**.
-- Utiliser le prix de clôture de la mauvaise date (prendre le premier jour ouvré du mois).
-- Oublier d'inclure le `capital_initial` dans le premier versement.
-- Confondre TER annuel et TER mensuel : `TER_mensuel = TER_annuel / 12`.
-- Backtesting ≠ prédiction → mentionner explicitement dans l'interface que les performances passées ne garantissent pas les performances futures.
+Le TER s'applique sur la **valeur du portefeuille**, pas sur le capital investi.
+C'est l'erreur classique qui sous-estime ou surestime massivement l'impact des frais.
+
+Toujours prendre le prix du **premier jour ouvré du mois**, pas le 1er du mois
+calendaire (qui peut tomber un week-end).
+
+Le `capital_initial` doit être inclus dans le premier versement, sinon il n'apparaît
+nulle part dans la simulation.
+
+TER mensuel = TER annuel / 12. Confusion fréquente, vérifier les ordres de grandeur
+sur 10 ans avec et sans frais (la différence doit être significative).
+
+Le backtesting n'est pas une prédiction. Le préciser explicitement dans l'interface :
+les performances passées ne garantissent rien pour le futur.

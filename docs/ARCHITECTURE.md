@@ -1,19 +1,19 @@
-# docs/ARCHITECTURE.md — Architecture technique du projet
+# Architecture technique
 
-## Diagramme d'architecture (ASCII)
+## Diagramme global
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        NAVIGATEUR (React 18)                    │
 │  ┌──────────┐   ┌──────────────┐   ┌──────────────────────────┐ │
 │  │ Module A │   │   Module B   │   │        Module C          │ │
-│  │ Explorateur│  │  DCA Simulator│  │  Régression OLS          │ │
+│  │Explorateur│  │ DCA Simulator│   │     Régression OLS       │ │
 │  └────┬─────┘   └──────┬───────┘   └───────────┬──────────────┘ │
 └───────┼──────────────────┼───────────────────────┼───────────────┘
         │  HTTP REST (JSON) │                       │
         ▼                  ▼                       ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                  BACKEND FastAPI (Python 3.11)                  │
+│                  BACKEND FastAPI (Python 3.12)                  │
 │                                                                 │
 │  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐ │
 │  │ /etf/ routes │  │/simulation/  │  │   /regression/ routes │ │
@@ -40,24 +40,24 @@
     Yahoo Finance API (externe, gratuite)
 ```
 
----
-
 ## Description des couches
 
 ### Frontend (React 18 + Vite + TypeScript)
-- SPA (Single Page Application) hébergée sur **Vercel**
-- Communication avec le backend via `fetch` ou `axios` (variable d'env `VITE_API_URL`)
-- Graphiques interactifs : **Recharts** pour les courbes DCA, **Plotly.js** pour la régression
-- Navigation par onglets ou router (React Router v6) : Module A / B / C
+
+SPA hébergée sur Vercel. Communication avec le backend via `fetch` ou `axios`,
+URL configurée par la variable `VITE_API_URL`. Graphiques avec Recharts pour
+les courbes DCA et Plotly.js pour la régression. Navigation par React Router v6
+entre les trois modules.
 
 ### Backend (FastAPI)
-- Hébergé sur **Railway** ou **Render** (avec auto-deploy depuis GitHub)
-- Trois routeurs : `etf`, `simulation`, `regression`
-- Validation des données d'entrée/sortie via **Pydantic v2**
-- Documentation Swagger auto-générée sur `/docs`
-- CORS configuré pour autoriser le domaine Vercel
+
+Hébergé sur Railway ou Render avec auto-deploy depuis GitHub. Trois routeurs
+(`etf`, `simulation`, `regression`), validation des entrées/sorties via
+Pydantic v2, Swagger auto-généré sur `/docs`, CORS configuré pour autoriser
+le domaine Vercel.
 
 ### Services métier
+
 | Service | Responsabilité |
 |---|---|
 | `etf_fetcher.py` | Récupère les cours via yfinance, enrichit depuis `etf_metadata.csv` |
@@ -65,13 +65,12 @@
 | `regression_engine.py` | Calcule OLS, R², p-value, résidus, IC 95 %, projection 12 mois |
 
 ### Base de données (PostgreSQL)
-- Connexion via `DATABASE_URL` (variable d'environnement)
-- ORM : SQLAlchemy 2.x avec sessions asynchrones ou synchrones
-- Création des tables au démarrage : `Base.metadata.create_all(bind=engine)`
 
----
+Connexion via `DATABASE_URL` en variable d'environnement. ORM SQLAlchemy 2.x
+en sessions synchrones. Tables créées au démarrage avec
+`Base.metadata.create_all(bind=engine)`.
 
-## Modèle de données complet
+## Modèle de données
 
 ### Table `etf`
 ```sql
@@ -122,7 +121,7 @@ CREATE TABLE simulation (
 CREATE TABLE resultat_simulation (
     id              SERIAL PRIMARY KEY,
     simulation_id   INTEGER REFERENCES simulation(id) ON DELETE CASCADE,
-    mois            INTEGER NOT NULL,            -- numéro du mois (1, 2, ...)
+    mois            INTEGER NOT NULL,
     date            DATE NOT NULL,
     prix_cloture    FLOAT NOT NULL,
     parts_achetees  FLOAT NOT NULL,
@@ -141,35 +140,29 @@ CREATE TABLE resultat_regression (
     date_calcul TIMESTAMP DEFAULT NOW(),
     periode_debut DATE,
     periode_fin   DATE,
-    beta0       FLOAT NOT NULL,                  -- intercept
-    beta1       FLOAT NOT NULL,                  -- pente (prix/jour)
+    beta0       FLOAT NOT NULL,
+    beta1       FLOAT NOT NULL,
     r_squared   FLOAT NOT NULL,
     p_value     FLOAT NOT NULL,
     std_error   FLOAT NOT NULL,
-    durbin_watson FLOAT,                         -- bonus
+    durbin_watson FLOAT,
     nb_observations INTEGER,
-    projection_json TEXT                         -- JSON: [{date, valeur_pred, ic_low, ic_high}]
+    projection_json TEXT
 );
 ```
 
----
+## Flux ETL
 
-## Flux de données ETL
-
-```
-1. Requête frontend → POST /etf/{ticker}/historique
-2. Backend vérifie si cours_historique contient déjà des données récentes
-3. Si non → appel yfinance.Ticker(ticker).history(period="10y")
+1. Le frontend requête `POST /etf/{ticker}/historique`
+2. Le backend vérifie si `cours_historique` contient des données récentes
+3. Sinon, appel à `yfinance.Ticker(ticker).history(period="10y")`
 4. Nettoyage Pandas (suppression NaN, normalisation colonnes)
-5. Upsert dans cours_historique (INSERT ... ON CONFLICT DO UPDATE)
-6. Enrichissement depuis etf_metadata.csv (TER, PEA, indice)
-7. Upsert dans etf
+5. Upsert dans `cours_historique` (INSERT ... ON CONFLICT DO UPDATE)
+6. Enrichissement depuis `etf_metadata.csv` (TER, PEA, indice)
+7. Upsert dans `etf`
 8. Retour JSON au frontend
-```
 
----
-
-## ETF minimaux à intégrer
+## ETF de référence
 
 | Ticker yfinance | Nom court | Indice | Éligible PEA |
 |---|---|---|---|
@@ -178,12 +171,15 @@ CREATE TABLE resultat_regression (
 | ESE.PA | Amundi S&P 500 ESG | S&P 500 ESG | Oui |
 | OBLI.PA | Lyxor Euro Govt Bond | Bloomberg Euro Govt | Oui |
 
-> Ajouter au moins 4 ETF pour la démo finale (critère d'évaluation).
+Minimum 4 ETF pour la démo finale (critère d'évaluation).
 
----
+## Points d'attention
 
-## Erreurs fréquentes à éviter
+Toujours utiliser `adj_close` plutôt que `close` pour les calculs : les dividendes
+et splits sont déjà appliqués.
 
-- Ne pas confondre `close` et `adj_close` : **toujours utiliser `adj_close`** pour les calculs (dividendes et splits ajustés).
-- Ne pas stocker les résultats de régression en mémoire vive uniquement → les persister en BDD pour l'endpoint GET.
-- Ne pas requêter yfinance à chaque appel API → mettre en cache BDD avec une fraîcheur de 24h.
+Les résultats de régression doivent être persistés en BDD pour permettre l'endpoint
+`GET /regression/{etf_id}` sans recalcul.
+
+Ne pas requêter yfinance à chaque appel API : mettre en cache BDD avec une fraîcheur
+de 24h, sinon les performances s'effondrent et Yahoo finit par bloquer l'IP.

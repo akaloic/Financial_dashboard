@@ -1,106 +1,127 @@
-# Financial Dashboard - Projet Data
+# Financial Dashboard — Projet Data
 
-Ce projet contient une API Backend (FastAPI) et un Frontend (React/Vite). Voici le guide complet pas à pas pour lancer le projet en local sur macOS et Windows.
+Application composée d'une API backend (FastAPI) et d'un frontend (React/Vite).
+Ce README décrit comment lancer le projet en local sur macOS et Windows.
 
-## 📋 Prérequis
+## Prérequis
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (doit être allumé et en cours d'exécution)
-- [Python 3.10+](https://www.python.org/downloads/)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/), lancé avant de démarrer (optionnel — voir note plus bas)
+- [Python 3.12](https://www.python.org/downloads/release/python-3128/) — versions 3.13+ non testées, certaines dépendances n'ont pas de wheels précompilés et tentent une compilation qui échoue sous Windows
 - [Node.js 18+](https://nodejs.org/)
+- [PostgreSQL 16+](https://www.postgresql.org/download/) si Docker ne fonctionne pas chez vous
 
----
+## 1. Base de données
 
-## 🚀 Étape 1 : Lancer la Base de Données
+### Option A — via Docker (si Docker tourne)
 
-1. Ouvrez l'application **Docker Desktop** et attendez qu'elle soit complètement démarrée.
-2. Ouvrez un terminal à la **racine** du projet.
-3. Lancez le conteneur PostgreSQL :
-    ```bash
-    docker-compose up -d
-    ```
-    _(Pour vérifier que la base tourne, tapez `docker ps`. Vous devriez voir un conteneur postgres)_.
+Depuis la racine du projet :
 
----
+```bash
+docker-compose up -d
+```
 
-## 🛠 Étape 2 : Lancer le Backend (API Python)
+Vérifier le conteneur avec `docker ps`.
 
-Ouvrez un **nouveau terminal** à la racine du projet.
+### Option B — PostgreSQL installé en local
 
-1. Allez dans le dossier `backend` :
-    ```bash
-    cd backend
-    ```
-2. Créez un environnement virtuel :
+Si Docker Desktop refuse de démarrer (cas fréquent sous Windows), installer
+PostgreSQL directement. Pendant l'installation, deux écrans demandent de
+l'attention :
 
-    ```bash
-    # macOS / Linux
-    python3 -m venv .venv
+- **Password** : mettre `postgres` (c'est ce que le `.env` attend par défaut)
+- **Locale** : choisir explicitement `English, United States` — la valeur par
+  défaut prend la locale système, et un cluster en `French_France.1252` fait
+  crasher psycopg2 sur des erreurs d'encodage UTF-8 impossibles à contourner
+  côté client.
 
-    # Windows
-    python -m venv .venv
-    ```
+Créer ensuite la base :
 
-3. Activez l'environnement virtuel :
+```bash
+psql -U postgres -h localhost -c "CREATE DATABASE projet_data;"
+```
 
-    ```bash
-    # macOS / Linux
-    source .venv/bin/activate
+## 2. Backend
 
-    # Windows
-    .venv\Scripts\activate
-    ```
+Dans un nouveau terminal, depuis la racine :
 
-4. Installez les dépendances :
-    ```bash
-    pip install -r requirements.txt
-    ```
-5. Configurez le fichier d'environnement :
+```bash
+cd backend
+```
 
-    ```bash
-    # macOS / Linux
-    cp .env.example .env
+Créer puis activer un environnement virtuel.
 
-    # Windows
-    copy .env.example .env
-    ```
+macOS / Linux :
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
 
-    _(Vérifiez que le `.env` contient la ligne `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/projet_data`)_
+Windows (CMD) :
+```bat
+py -3.12 -m venv .venv
+.venv\Scripts\activate
+```
 
-6. Lancez le serveur :
-    ```bash
-    uvicorn main:app --reload --port 8000
-    ```
-    L'API sera disponible sur `http://localhost:8000` (Doc sur `http://localhost:8000/docs`).
+Sous PowerShell, l'activation est `.venv\Scripts\Activate.ps1`. Si elle est
+refusée par la politique d'exécution, lancer une fois
+`Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`,
+ou simplement utiliser CMD.
 
----
+Installer les dépendances et préparer le fichier d'environnement :
 
-## 💻 Étape 3 : Lancer le Frontend (React)
+```bash
+pip install -r requirements.txt
+cp .env.example .env          # Windows : copy .env.example .env
+```
 
-Ouvrez un **dernier nouveau terminal** à la racine du projet.
+Si `.env.example` se trouve à la racine du projet plutôt que dans `backend/`, copier depuis là :
+```bash
+cp ../.env.example .env       # Windows : copy ..\.env.example .env
+```
 
-1. Allez dans le dossier `frontend` :
-    ```bash
-    cd frontend
-    ```
-2. Installez les dépendances :
-    ```bash
-    npm install
-    ```
-3. Configurez le fichier d'environnement :
+Le `.env` doit contenir au minimum :
 
-    ```bash
-    # macOS / Linux
-    cp .env.example .env.local
+```
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/projet_data
+```
 
-    # Windows
-    copy .env.example .env.local
-    ```
+Lancer le serveur :
 
-    _(Ce fichier doit contenir `VITE_API_URL=http://localhost:8000`)_
+```bash
+uvicorn main:app --reload --port 8000
+```
 
-4. Lancez l'interface web :
-    ```bash
-    npm run dev
-    ```
+L'API est exposée sur `http://localhost:8000`, la documentation Swagger sur `/docs`.
 
-🌐 **Votre application web est maintenant accessible via votre navigateur, généralement sur `http://localhost:5173`.**
+À chaque nouveau terminal, il faut réactiver le venv avant de lancer uvicorn.
+
+## 3. Frontend
+
+Dans un nouveau terminal, depuis la racine :
+
+```bash
+cd frontend
+npm install
+cp .env.example .env.local    # Windows : copy .env.example .env.local
+```
+
+Le `.env.local` doit contenir :
+
+```
+VITE_API_URL=http://localhost:8000
+```
+
+Lancer l'interface :
+
+```bash
+npm run dev
+```
+
+L'application est accessible sur `http://localhost:5173`.
+
+## Tests backend
+
+```bash
+cd backend
+pytest tests/ -v
+```

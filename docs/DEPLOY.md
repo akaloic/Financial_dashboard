@@ -1,6 +1,6 @@
-# docs/DEPLOY.md — Déploiement Vercel + Railway/Render
+# Déploiement — Vercel + Railway/Render
 
-## Architecture de déploiement
+## Architecture
 
 ```
 GitHub (main branch)
@@ -10,36 +10,39 @@ GitHub (main branch)
        └──── Railway ou Render ───────► Backend FastAPI + PostgreSQL (URL publique)
 ```
 
----
-
-## 1. Déploiement Backend (Railway)
+## 1. Backend (Railway)
 
 ### Prérequis
-- Compte Railway : https://railway.app
-- CLI Railway (optionnel) : `npm install -g @railway/cli`
 
-### Étapes
+Compte Railway sur https://railway.app. La CLI est optionnelle :
+`npm install -g @railway/cli`.
 
-**1.1 Créer un projet Railway**
+### Création du projet
+
 1. Connecter le compte GitHub
 2. New Project → Deploy from GitHub repo → sélectionner `projet-data`
 3. Root directory : `backend`
 
-**1.2 Ajouter PostgreSQL**
-1. Dans le projet Railway → New → Database → PostgreSQL
-2. Copier la variable `DATABASE_URL` générée automatiquement
+### Ajout de PostgreSQL
 
-**1.3 Variables d'environnement (Railway → Settings → Variables)**
-```env
-DATABASE_URL=<fourni automatiquement par Railway PostgreSQL>
+Dans le projet Railway, New → Database → PostgreSQL. La variable `DATABASE_URL`
+est générée automatiquement et injectée dans le service backend.
+
+### Variables d'environnement
+
+Dans Settings → Variables, ajouter :
+
+```
+DATABASE_URL=<fourni par Railway>
 ENVIRONMENT=production
 CORS_ORIGINS=https://<votre-app>.vercel.app
 PORT=8000
 ```
 
-**1.4 Fichier de configuration Railway (backend/railway.toml ou Procfile)**
+### Configuration du déploiement
+
+Créer `backend/railway.toml` :
 ```toml
-# railway.toml
 [build]
 builder = "NIXPACKS"
 
@@ -47,7 +50,8 @@ builder = "NIXPACKS"
 startCommand = "uvicorn main:app --host 0.0.0.0 --port $PORT"
 ```
 
-**1.5 requirements.txt minimal**
+### `requirements.txt` minimal
+
 ```
 fastapi==0.111.0
 uvicorn[standard]==0.29.0
@@ -64,31 +68,29 @@ pydantic==2.7.1
 alembic==1.13.1
 ```
 
-**1.6 Vérification**
-- URL backend disponible : `https://<app>.railway.app/docs`
-- Tester : `curl https://<app>.railway.app/etf/`
+### Vérification
 
----
+- URL backend : `https://<app>.railway.app/docs`
+- Test rapide : `curl https://<app>.railway.app/etf/`
 
-## 2. Déploiement Frontend (Vercel)
+## 2. Frontend (Vercel)
 
-### Prérequis
-- Compte Vercel : https://vercel.com
-- Framework détecté automatiquement : Vite
+### Connexion du dépôt
 
-### Étapes
-
-**2.1 Connecter le dépôt GitHub**
 1. Vercel Dashboard → New Project → Import from GitHub
 2. Root directory : `frontend`
-3. Framework Preset : **Vite**
+3. Framework Preset : Vite (détection automatique)
 
-**2.2 Variables d'environnement (Vercel → Settings → Environment Variables)**
-```env
+### Variables d'environnement
+
+Dans Settings → Environment Variables :
+
+```
 VITE_API_URL=https://<votre-backend>.railway.app
 ```
 
-**2.3 Configuration Vite (frontend/vite.config.ts)**
+### Configuration Vite (`frontend/vite.config.ts`)
+
 ```typescript
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -107,25 +109,24 @@ export default defineConfig({
 })
 ```
 
-**2.4 Build & Deploy**
-- Vercel détecte automatiquement `npm run build` → dossier `dist/`
-- Tout push sur `main` déclenche un redéploiement automatique
+### Build & Deploy
 
----
+Vercel détecte `npm run build` et déploie `dist/`. Tout push sur `main`
+déclenche un redéploiement.
 
 ## 3. Alternative : Render
 
-Si Railway pose des problèmes, utiliser **Render** :
+Si Railway pose problème :
 
 1. https://render.com → New Web Service → connecter GitHub
 2. Root directory : `backend`
 3. Build Command : `pip install -r requirements.txt`
 4. Start Command : `uvicorn main:app --host 0.0.0.0 --port $PORT`
-5. Ajouter un PostgreSQL depuis Render Dashboard
+5. Ajouter un PostgreSQL depuis le dashboard Render
 
----
+## 4. CORS côté backend
 
-## 4. Configuration CORS (backend/main.py)
+Dans `backend/main.py` :
 
 ```python
 from fastapi import FastAPI
@@ -145,40 +146,44 @@ app.add_middleware(
 )
 ```
 
----
+## Checklist avant soutenance
 
-## 5. Checklist avant soutenance
+Backend :
+- URL publique stable accessible (Railway/Render)
+- Swagger disponible sur `/docs`
+- Tous les endpoints répondent (test manuel via Swagger)
+- Base initialisée avec les 4 ETF minimum
+- Aucun `.env` visible dans le dépôt GitHub
 
-### Backend
-- [ ] URL publique stable accessible (Railway/Render)
-- [ ] Swagger disponible sur `/docs`
-- [ ] Tous les endpoints répondent (test manuel via Swagger)
-- [ ] Base de données initialisée avec les 4 ETF minimum
-- [ ] Pas de `.env` visible dans le dépôt GitHub
+Frontend :
+- URL Vercel stable et partagée
+- Les 3 modules accessibles via la navigation
+- Graphiques interactifs fonctionnels
+- `VITE_API_URL` pointe vers le backend de prod
 
-### Frontend
-- [ ] URL Vercel stable et partagée
-- [ ] Les 3 modules sont accessibles via la navigation
-- [ ] Graphiques interactifs fonctionnels
-- [ ] Variable `VITE_API_URL` pointe vers le backend de production
+GitHub :
+- Historique de commits progressif (au moins un par sprint)
+- `.gitignore` présent et complet
+- README avec liens vers les déploiements
+- Branches `module-a`, `module-b`, `module-c` visibles
 
-### GitHub
-- [ ] Historique de commits progressif (au moins 1 commit par sprint)
-- [ ] `.gitignore` présent et complet
-- [ ] README avec URL de déploiement frontend et backend
-- [ ] Branches `module-a`, `module-b`, `module-c` visibles
+Général :
+- Démo live préparée (scénario 5 min : chercher CW8 → simuler DCA → régression)
+- Application stable 48h avant la soutenance
+- Rapport PDF rendu 48h avant la soutenance
 
-### Général
-- [ ] Démo live préparée (scénario de 5 min : chercher CW8 → simuler DCA → afficher régression)
-- [ ] Application stable 48h avant la soutenance
-- [ ] Rapport PDF rendu 48h avant la soutenance
+## Points d'attention
 
----
+Oublier `CORS_ORIGINS` en production rend le frontend inutilisable : toutes les
+requêtes sont rejetées par le navigateur.
 
-## Erreurs fréquentes à éviter
+`VITE_API_URL` non défini sur Vercel envoie les requêtes vers `localhost` qui
+n'existe pas côté visiteur.
 
-- Oublier de configurer `CORS_ORIGINS` en production → le frontend ne peut pas appeler le backend.
-- `VITE_API_URL` non défini sur Vercel → toutes les requêtes échouent en production.
-- Commit du `.env` → invalider immédiatement les secrets si cela arrive.
-- Base de données vide en production → prévoir un script de seed (`seed_etf.py`).
-- Port hardcodé à `8000` sans lire `$PORT` → Railway/Render assignent le port dynamiquement.
+Hardcoder le port à 8000 sans lire `$PORT` casse le déploiement sur Railway/Render
+qui assignent le port dynamiquement.
+
+Prévoir un script de seed (`seed_etf.py`) pour ne pas livrer une base de prod vide.
+
+Si un `.env` est commité par accident, considérer les secrets comme compromis et
+les régénérer immédiatement.

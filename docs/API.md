@@ -1,36 +1,34 @@
-# docs/API.md — Documentation des endpoints REST
+# API — Documentation des endpoints REST
 
 ## Base URL
 
-- **Développement** : `http://localhost:8000`
-- **Production** : `https://<votre-app>.railway.app` (ou Render)
-- **Documentation interactive** : `{BASE_URL}/docs` (Swagger UI)
+- Développement : `http://localhost:8000`
+- Production : `https://<votre-app>.railway.app` (ou Render)
+- Documentation interactive Swagger : `{BASE_URL}/docs`
 
----
+## Conventions
 
-## Conventions générales
-
-- Toutes les réponses sont en **JSON**
-- Les dates sont au format **ISO 8601** : `YYYY-MM-DD`
-- Les tickers incluent l'extension de place : `CW8.PA`, `ESE.PA`
-- Codes HTTP utilisés : `200 OK`, `201 Created`, `400 Bad Request`, `404 Not Found`, `422 Unprocessable Entity`, `500 Internal Server Error`
-- Les erreurs retournent un objet `{"detail": "message d'erreur"}`
+Toutes les réponses sont en JSON. Les dates sont au format ISO 8601 (`YYYY-MM-DD`).
+Les tickers incluent l'extension de place : `CW8.PA`, `ESE.PA`. Les codes HTTP
+utilisés sont les standards (`200`, `201`, `400`, `404`, `422`, `500`). Les
+erreurs renvoient `{"detail": "message d'erreur"}`.
 
 ---
 
 ## Module A — ETF
 
-### GET /etf/
+### `GET /etf/`
 
-**Description** : Liste tous les ETF disponibles en BDD. Supporte la recherche par texte.
+Liste les ETF disponibles en BDD, avec recherche optionnelle par texte.
 
-**Query parameters** :
+Query parameters :
+
 | Paramètre | Type | Requis | Description |
 |---|---|---|---|
 | `search` | string | Non | Filtre par ticker ou nom (recherche partielle, insensible à la casse) |
 | `limit` | int | Non | Nombre max de résultats (défaut : 50) |
 
-**Réponse 200** :
+Réponse 200 :
 ```json
 [
   {
@@ -46,15 +44,13 @@
 ]
 ```
 
----
+### `GET /etf/{ticker}`
 
-### GET /etf/{ticker}
+Fiche descriptive complète d'un ETF.
 
-**Description** : Retourne la fiche descriptive complète d'un ETF.
+Path parameter : `ticker` (string), ex. `CW8.PA`.
 
-**Path parameter** : `ticker` (string) — ex: `CW8.PA`
-
-**Réponse 200** :
+Réponse 200 :
 ```json
 {
   "id": 1,
@@ -69,25 +65,25 @@
 }
 ```
 
-**Réponse 404** :
+Réponse 404 :
 ```json
 {"detail": "ETF 'XYZ.PA' non trouvé"}
 ```
 
----
+### `GET /etf/{ticker}/historique`
 
-### GET /etf/{ticker}/historique
+Historique de cours d'un ETF. Déclenche un fetch yfinance si les données ne
+sont pas en BDD ou datent de plus de 24h.
 
-**Description** : Retourne l'historique de cours d'un ETF. Déclenche un fetch yfinance si les données ne sont pas en BDD ou sont obsolètes (> 24h).
+Path parameter : `ticker` (string).
 
-**Path parameter** : `ticker` (string)
+Query parameters :
 
-**Query parameters** :
 | Paramètre | Type | Requis | Valeurs | Défaut |
 |---|---|---|---|---|
 | `period` | string | Non | `1y`, `3y`, `10y` | `1y` |
 
-**Réponse 200** :
+Réponse 200 :
 ```json
 {
   "ticker": "CW8.PA",
@@ -103,11 +99,11 @@
 
 ## Module B — Simulation DCA
 
-### POST /simulation/
+### `POST /simulation/`
 
-**Description** : Lance une nouvelle simulation DCA et persiste les résultats en BDD.
+Lance une simulation DCA et persiste les résultats.
 
-**Body JSON** :
+Body :
 ```json
 {
   "etf_ticker": "CW8.PA",
@@ -119,13 +115,13 @@
 }
 ```
 
-**Contraintes de validation** :
+Contraintes :
 - `capital_initial` ≥ 0
 - `versement_mensuel` > 0
 - `date_debut` < `date_fin`
 - `ter` ∈ [0, 0.05]
 
-**Réponse 201** :
+Réponse 201 :
 ```json
 {
   "simulation_id": 42,
@@ -154,30 +150,20 @@
 }
 ```
 
----
+### `GET /simulation/{id}`
 
-### GET /simulation/{id}
-
-**Description** : Récupère les résultats d'une simulation existante.
-
-**Path parameter** : `id` (int)
-
-**Réponse 200** : même format que POST /simulation/ (sans relancer le calcul)
-
-**Réponse 404** :
-```json
-{"detail": "Simulation #42 non trouvée"}
-```
+Retourne les résultats d'une simulation existante sans relancer le calcul.
+Même format de réponse que `POST /simulation/`. Renvoie 404 si l'id n'existe pas.
 
 ---
 
 ## Module C — Régression OLS
 
-### POST /regression/
+### `POST /regression/`
 
-**Description** : Calcule la régression OLS sur un ETF pour une période donnée.
+Calcule la régression OLS sur un ETF pour une période donnée.
 
-**Body JSON** :
+Body :
 ```json
 {
   "etf_ticker": "CW8.PA",
@@ -186,7 +172,7 @@
 }
 ```
 
-**Réponse 201** :
+Réponse 201 :
 ```json
 {
   "regression_id": 7,
@@ -210,20 +196,10 @@
 }
 ```
 
----
+### `GET /regression/{etf_id}`
 
-### GET /regression/{etf_id}
-
-**Description** : Récupère la dernière régression calculée pour un ETF donné (par ID BDD).
-
-**Path parameter** : `etf_id` (int)
-
-**Réponse 200** : même format que POST /regression/
-
-**Réponse 404** :
-```json
-{"detail": "Aucune régression trouvée pour l'ETF #1"}
-```
+Retourne la dernière régression calculée pour un ETF (par id BDD).
+Renvoie 404 s'il n'en existe pas.
 
 ---
 
@@ -238,7 +214,7 @@
 
 ---
 
-## Implémentation FastAPI (exemple router ETF)
+## Exemple d'implémentation FastAPI
 
 ```python
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -252,18 +228,15 @@ router = APIRouter(prefix="/etf", tags=["ETF"])
 def list_etf(search: str = Query(None), limit: int = Query(50), db: Session = Depends(get_db)):
     """
     Retourne la liste des ETF en BDD.
-    - **search** : filtre optionnel sur ticker ou nom
-    - **limit** : nombre maximum de résultats (défaut 50)
+    - search : filtre optionnel sur ticker ou nom
+    - limit : nombre maximum de résultats (défaut 50)
     """
-    # ... logique de requête SQLAlchemy
+    # logique de requête SQLAlchemy
     pass
 
 @router.get("/{ticker}", summary="Fiche descriptive d'un ETF")
 def get_etf(ticker: str, db: Session = Depends(get_db)):
-    """
-    Retourne la fiche complète d'un ETF identifié par son ticker (ex: CW8.PA).
-    Lève 404 si le ticker est inconnu.
-    """
+    """Retourne la fiche complète d'un ETF par ticker. 404 si inconnu."""
     etf = db.query(ETF).filter(ETF.ticker == ticker.upper()).first()
     if not etf:
         raise HTTPException(status_code=404, detail=f"ETF '{ticker}' non trouvé")
