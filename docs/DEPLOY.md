@@ -1,14 +1,26 @@
-# Déploiement — Vercel + Railway
+# Déploiement — Railway
 
 ## Architecture
 
 ```
 GitHub (main branch)
        │
-       ├──── Vercel (auto-deploy) ────► Frontend React (URL publique)
-       │
-       └──── Railway ──────────────────► Backend FastAPI + PostgreSQL (URL publique)
+       └──── Railway ──── Frontend React (URL publique)
+                     └── Backend FastAPI (URL publique)
+                     └── PostgreSQL
 ```
+
+Le projet est entièrement hébergé sur Railway. Les trois services (frontend,
+backend, base de données) sont regroupés dans le même projet Railway, ce qui
+permet de partager les variables d'environnement par référence et de
+simplifier la gestion.
+
+Le choix initial d'utiliser Vercel pour le frontend a été abandonné en
+faveur d'un déploiement Railway unifié, après un blocage d'accès au dépôt
+GitHub côté Vercel. La concentration sur une seule plateforme présente
+l'avantage secondaire de garder les trois services dans le même tableau
+de bord et la même facturation, au prix d'un CDN moins distribué que celui
+de Vercel.
 
 ## 1. Backend (Railway)
 
@@ -72,8 +84,8 @@ ENVIRONMENT=production
 CORS_ORIGINS=*
 ```
 
-`CORS_ORIGINS=*` est temporaire. Une fois le frontend déployé sur Vercel,
-remplacer par l'URL Vercel exacte (sans wildcard).
+`CORS_ORIGINS=*` est temporaire. Une fois le frontend déployé, remplacer
+par l'URL Railway exacte du frontend (sans wildcard).
 
 Important : ne pas définir de variable `PORT`. Railway assigne le port
 dynamiquement via la variable `$PORT` qu'il injecte lui-même, et la
@@ -113,53 +125,89 @@ pydantic==2.7.1
 alembic==1.13.1
 ```
 
-Note : `psycopg2-binary` est important plutôt que `psycopg2` tout court,
-sinon le build Nixpacks essaie de compiler depuis les sources et échoue.
+Note : `psycopg2-binary` plutôt que `psycopg2`, sinon le build Nixpacks
+essaie de compiler depuis les sources et échoue.
 
 ### Exposer publiquement le service
 
-Une fois le service `Online` (badge vert sur le canvas), il n'est pas
-accessible depuis l'extérieur tant qu'on n'a pas généré un domaine
-public.
+Une fois le service `Online`, il n'est pas accessible depuis
+l'extérieur tant qu'on n'a pas généré un domaine public.
 
 1. Cliquer sur le service backend
 2. Onglet **Settings** → section **Networking**
 3. Bouton **Generate Domain**
 
 Railway génère une URL du type
-`<nom-du-projet>-production.up.railway.app`. Cette URL devient l'endpoint
-public du backend.
+`<nom-du-projet>-production.up.railway.app`. Cette URL devient
+l'endpoint public du backend.
 
 ### Vérification
 
-- Documentation Swagger : `https://<URL-RAILWAY>/docs` doit afficher
-  l'interface Swagger
-- Test endpoint : `curl https://<URL-RAILWAY>/etf/` doit retourner du
-  JSON (probablement liste vide si la base n'est pas seedée)
+- Documentation Swagger : `https://<URL-RAILWAY-BACKEND>/docs` doit
+  afficher l'interface Swagger
+- Test endpoint : `curl https://<URL-RAILWAY-BACKEND>/etf/` doit
+  retourner du JSON
 
 Si Swagger ne répond pas alors que le service est `Online`, regarder
 les **Deploy Logs** du dernier déploiement — l'erreur Python s'y
 trouve en clair.
 
-## 2. Frontend (Vercel)
+## 2. Frontend (Railway)
 
-### Connexion du dépôt
+### Création du service frontend
 
-1. Vercel Dashboard → New Project → Import from GitHub
-2. Sélectionner le dépôt du projet
-3. Root directory : `frontend`
-4. Framework Preset : **Vite** (détection automatique)
+Dans le **même projet Railway** que le backend :
 
-### Variables d'environnement
+1. Bouton **+ New** → **GitHub Repo** → sélectionner le même dépôt
+2. Un nouveau service apparaît sur le canvas
+3. Renommer le service en `frontend` pour distinguer du backend (clic
+   sur son titre → Rename)
+4. Onglet **Settings** → **Source** → **Root Directory** : `/frontend`
 
-Dans Settings → Environment Variables :
+### Variable d'environnement (critique : avant le premier build)
+
+Vite substitue les variables `VITE_*` au moment du **build**, pas au
+runtime. Il faut donc définir `VITE_API_URL` avant le premier build,
+sinon le frontend partira en prod en pointant vers la valeur fallback
+définie dans `vite.config.ts` (typiquement `http://localhost:8000`),
+qui ne marchera pas pour les visiteurs.
+
+Onglet **Variables** → **+ New Variable** → Raw Value :
 
 ```
-VITE_API_URL=https://<URL-RAILWAY>
+VITE_API_URL=https://<URL-RAILWAY-BACKEND>
 ```
 
-L'URL doit être exactement celle générée par Railway à l'étape
-précédente, sans slash final.
+L'URL doit être exactement celle générée par Railway pour le backend,
+sans slash final.
+
+### Commande de démarrage
+
+Vite produit un dossier `dist/` au build mais ne propose pas de
+commande pour le servir en production. Il faut un serveur statique
+externe. Le plus simple est d'utiliser le package `serve` exécuté à
+la volée par `npx` :
+
+Onglet **Settings** → **Deploy** → **Custom Start Command** :
+
+```
+npx serve -s dist -l $PORT
+```
+
+Cette commande sert le dossier `dist/` (qui contient le build Vite) en
+mode SPA (l'option `-s` rewrite toutes les routes vers `index.html`,
+nécessaire pour React Router). Le `$PORT` est assigné par Railway.
+
+Alternative : ajouter `serve` aux `devDependencies` du `package.json`
+du frontend pour éviter le téléchargement à chaque démarrage :
+
+```json
+"devDependencies": {
+  "serve": "^14.2.0"
+}
+```
+
+Puis utiliser `serve -s dist -l $PORT` (sans `npx`) comme Start Command.
 
 ### Configuration Vite
 
@@ -183,21 +231,24 @@ export default defineConfig({
 })
 ```
 
-### Build et déploiement
+### Exposer publiquement le frontend
 
-Vercel détecte `npm run build` et déploie `dist/`. Tout push sur `main`
-déclenche un redéploiement automatique.
+Comme pour le backend, l'URL n'est pas générée automatiquement :
 
-Une URL Vercel du type `<nom-projet>.vercel.app` est générée à chaque
-build.
+1. Cliquer sur le service `frontend`
+2. Onglet **Settings** → section **Networking**
+3. Bouton **Generate Domain**
 
-### Boucler le CORS
+Récupérer l'URL générée, par exemple
+`frontend-production-xxxx.up.railway.app`.
 
-Une fois l'URL Vercel obtenue, revenir sur Railway et modifier la
-variable `CORS_ORIGINS` du backend :
+### Boucler le CORS côté backend
+
+Une fois l'URL frontend obtenue, revenir sur le service backend et
+modifier la variable `CORS_ORIGINS` :
 
 ```
-CORS_ORIGINS=https://<URL-VERCEL>
+CORS_ORIGINS=https://<URL-RAILWAY-FRONTEND>
 ```
 
 Sans cette mise à jour, le navigateur bloquera tous les appels du
@@ -237,18 +288,17 @@ Backend :
 - Aucun `.env` visible dans le dépôt GitHub
 
 Frontend :
-- URL Vercel stable et partagée
+- URL Railway stable et partagée
 - Les 3 modules accessibles via la navigation
 - Graphiques interactifs fonctionnels
-- `VITE_API_URL` pointe vers le backend de prod
+- `VITE_API_URL` définie avant le build, pointant vers le backend de prod
 - Pas d'erreur CORS dans la console navigateur
 
 GitHub :
 - Historique de commits progressif (au moins un par sprint)
 - `.gitignore` présent et complet
 - README avec liens vers les déploiements
-- Branches `module-a`, `module-b`, `module-c` visibles si elles ont été
-  utilisées
+- Branches `module-a`, `module-b`, `module-c` visibles si utilisées
 
 Général :
 - Démo live préparée (scénario 5 min : chercher CW8 → simuler DCA → régression)
@@ -257,29 +307,80 @@ Général :
 
 ## Erreurs rencontrées et résolutions
 
-Quelques pièges concrets vécus pendant le déploiement initial, à
-documenter pour le coéquipier ou un déploiement futur.
+Quelques pièges concrets vécus pendant le déploiement, à documenter pour
+le coéquipier ou un déploiement futur.
 
-**Premier déploiement crashe sur `DATABASE_URL is not set`.** La variable
-`DATABASE_URL` n'a pas été ajoutée comme référence vers le service
-Postgres. Voir la section dédiée plus haut.
+**Premier déploiement backend crashe sur `DATABASE_URL is not set`.** La
+variable `DATABASE_URL` n'a pas été ajoutée comme référence vers le
+service Postgres. Voir la section dédiée plus haut.
 
-**Service en `Online` mais URL inaccessible.** Le domaine public n'a pas
-été généré. Settings → Networking → Generate Domain.
+**Service en `Online` mais URL inaccessible.** Le domaine public n'a
+pas été généré. Settings → Networking → Generate Domain.
 
-**Build échoue sur la compilation de `psycopg2`.** Le `requirements.txt`
-spécifie `psycopg2` au lieu de `psycopg2-binary`. Le premier nécessite
-des outils de compilation absents du conteneur Nixpacks, le second est
-distribué en wheel précompilé.
+**Build backend échoue sur la compilation de `psycopg2`.** Le
+`requirements.txt` spécifie `psycopg2` au lieu de `psycopg2-binary`. Le
+premier nécessite des outils de compilation absents du conteneur
+Nixpacks, le second est distribué en wheel précompilé.
 
-**L'Agent Railway propose Redis et un Bucket.** Refuser : ce projet n'a
-besoin que du backend et de PostgreSQL. L'Agent est facturable et
-épuiserait le crédit gratuit.
+**Vercel ne voit pas le repo lors de l'import.** Permission GitHub non
+accordée au compte Vercel, ou compte non collaborateur du repo. Si pas
+possible de résoudre rapidement, basculer le frontend sur Railway
+comme documenté en section 2.
 
-**Variables suggérées `client_encoding=utf8` lors du premier build.**
-Refuser : c'est un héritage du débogage local sous Windows français,
-inutile sur le cluster Postgres Railway qui est en UTF-8.
+**Frontend Railway part en prod sans pouvoir contacter le backend.**
+La variable `VITE_API_URL` n'a pas été définie avant le premier build.
+Définir la variable, puis redéployer manuellement (Deployments →
+Redeploy) pour relancer un build qui prendra cette fois la bonne valeur.
 
-**CORS bloque les appels frontend après déploiement.** La variable
-`CORS_ORIGINS` côté Railway n'a pas été mise à jour avec l'URL Vercel
-réelle. Toujours synchroniser après le premier déploiement Vercel.
+**`VITE_API_URL` mal formatée — frontend silencieusement cassé en prod.**
+Les chevrons `<...>` utilisés comme placeholders dans la documentation
+restent collés à la valeur si on copie-colle sans réfléchir. La valeur
+attendue est `https://backend-xxx.up.railway.app`, sans `<>`, sans
+guillemets, avec le `https://` préfixe, sans slash final. Une valeur
+mal formatée ne déclenche aucune erreur au build — le frontend partira
+en prod en faisant des requêtes vers une URL invalide.
+
+**`DATABASE_URL=${{DATABASE_URL}}` ne résout pas.** Le préfixe du
+service est obligatoire dans une référence Railway. La syntaxe
+correcte est `${{Postgres.DATABASE_URL}}` (ou le nom exact du service
+Postgres s'il a été renommé). Sans le préfixe, Railway interprète la
+variable comme une auto-référence circulaire et la laisse littéralement
+non résolue.
+
+**Postgres passe en "offline" sans raison apparente.** Le plus souvent,
+le service a été arrêté manuellement ou mis en pause via l'interface
+Railway. Pour le relancer : service Postgres → onglet Deployments →
+sur le dernier déploiement, menu `⋮` → Redeploy. Vérifier ensuite que
+le service repasse `Online` avant de relancer le backend.
+
+**"Deploys have been paused temporarily" en haut de l'interface.**
+Trois causes possibles : crédit gratuit épuisé (Settings → Usage), des
+changements stagés non appliqués qui bloquent (cliquer sur Details
+pour voir et Apply/Discard), ou des services Agent (Redis, Bucket) qui
+consomment du crédit pour rien (Settings → Danger → Delete Service).
+
+**L'Agent Railway propose Redis et un Bucket.** Refuser : ce projet
+n'a besoin que de trois services (backend, frontend, PostgreSQL).
+L'Agent est facturable et épuiserait le crédit gratuit. Si l'Agent a
+déjà provisionné ces services, les supprimer manuellement.
+
+**L'Agent Railway suggère d'ajouter `DATABASE_URL`, `CORS_ORIGINS`,
+`ENVIRONMENT` etc. sur le service frontend.** Ignorer toutes ces
+suggestions. Un frontend React statique n'a besoin que de
+`VITE_API_URL`. Les autres variables (BDD, CORS) sont du domaine
+exclusif du backend.
+
+**Variables suggérées `client_encoding=utf8` lors du premier build
+backend.** Refuser : c'est un héritage du débogage local sous Windows
+français, inutile sur le cluster Postgres Railway en UTF-8.
+
+**Mot de passe Postgres partagé par inadvertance (capture, chat,
+commit).** Considérer le credential comme compromis. Régénérer
+immédiatement : service Postgres → Variables → `POSTGRES_PASSWORD` →
+Generate New Password. Toutes les variables dépendantes
+(`DATABASE_URL`, `PGPASSWORD`) se mettent automatiquement à jour
+puisqu'elles utilisent des références.
+
+**CORS bloque les appels frontend.** La variable `CORS_ORIGINS` côté
+backend n'a pas été mise à jour avec l'URL frontend réelle. Toujours
+synchroniser après le déploiement frontend.
