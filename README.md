@@ -4,17 +4,17 @@ Application composée d'une API backend (FastAPI) et d'un frontend (React/Vite).
 Ce README décrit comment lancer le projet en local sur macOS et Windows, ainsi
 que les URLs de déploiement.
 
-## Déploiement
+## Lancement et déploiement
 
-L'application est entièrement déployée sur Railway (trois services dans le
-même projet : frontend, backend, PostgreSQL).
+La procédure de référence pour faire tourner l'application est le **lancement
+local** décrit ci-dessous (base de données, backend, frontend). Une fois lancée,
+l'API expose sa documentation Swagger sur `http://localhost:8000/docs`.
 
-- **Frontend** : `https://<URL-RAILWAY-FRONTEND>`
-- **Backend** : `https://<URL-RAILWAY-BACKEND>`
-- **Documentation Swagger** : `https://<URL-RAILWAY-BACKEND>/docs`
-
-La procédure de déploiement détaillée est documentée dans
-[`docs/DEPLOY.md`](docs/DEPLOY.md).
+Le projet a également été déployé sur Railway à titre de démonstration (trois
+services dans un même projet : frontend, backend, PostgreSQL). Ce déploiement a
+connu des problèmes de stabilité, c'est pourquoi le lancement local reste la
+voie recommandée pour l'évaluation. La procédure de déploiement complète est
+documentée dans [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ## Prérequis
 
