@@ -16,6 +16,34 @@ connu des problèmes de stabilité, c'est pourquoi le lancement local reste la
 voie recommandée pour l'évaluation. La procédure de déploiement complète est
 documentée dans [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
+## 🌐 Déploiement gratuit (recommandé : GitHub Pages + Render)
+
+Le déploiement Railway a été abandonné (crédit gratuit limité → instabilité). La
+nouvelle cible est **100 % gratuite et durable** :
+
+| Brique | Hébergeur | Notes |
+|---|---|---|
+| Frontend (SPA) | **GitHub Pages** | Auto-déployé via Actions à chaque push |
+| Backend (API) | **Render** (plan free) | Blueprint `render.yaml` → déploiement 1-clic |
+| Base de données | *aucune requise* | Repli **SQLite** + snapshot de vraies données embarqué |
+
+**Frontend** → https://akaloic.github.io/Financial_dashboard/ (publié par
+`.github/workflows/deploy-frontend.yml`).
+
+**Backend** → sur https://render.com : `New +` → `Blueprint` → connecter ce dépôt.
+Render lit `render.yaml` et provisionne l'API. Sans `DATABASE_URL`, l'app tourne sur
+SQLite et **amorce de vraies données 10 ans depuis le snapshot embarqué**
+(`backend/data/etf_history_seed.csv.gz`, 16 ETF) — aucune base externe à provisionner,
+et aucune dépendance à Yahoo Finance au runtime (souvent bloqué depuis les datacenters).
+
+L'URL d'API est pré-câblée dans le build, **et** modifiable au runtime via le bandeau
+en haut de l'app (pratique si Render attribue une autre URL). Pour brancher une vraie
+base PostgreSQL gratuite : créer une base **Neon** (https://neon.tech) et définir
+`DATABASE_URL` dans les variables du service Render.
+
+> Régénérer le snapshot (depuis une machine non bloquée par Yahoo) :
+> `cd backend && python scripts/build_seed_snapshot.py`
+
 ## Prérequis
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/), lancé avant de démarrer (optionnel — voir note plus bas)
