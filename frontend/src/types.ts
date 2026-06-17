@@ -47,6 +47,17 @@ export interface ResultatMensuel {
   capital_investi: number;
 }
 
+export interface MetriquesRisque {
+  volatilite_annualisee: number;
+  sharpe: number;
+  sortino: number;
+  max_drawdown: number;
+  meilleur_mois: number;
+  pire_mois: number;
+  profil_risque: string;
+  note: string;
+}
+
 export interface SimulationResponse {
   simulation_id: number;
   etf_ticker: string;
@@ -59,6 +70,7 @@ export interface SimulationResponse {
   cagr_brut: number;
   cagr_net: number;
   valeur_livret_a: number;
+  metriques_risque: MetriquesRisque;
   resultats_mensuels: ResultatMensuel[];
 }
 

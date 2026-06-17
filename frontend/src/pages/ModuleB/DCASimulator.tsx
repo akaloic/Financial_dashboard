@@ -12,6 +12,36 @@ const fmt = (v: number, decimals = 0) =>
     }).format(v);
 
 const fmtPct = (v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
+const fmtRatioPct = (v: number) => `${v >= 0 ? "+" : ""}${(v * 100).toFixed(1)}%`;
+
+const RISK_COLORS: Record<string, { bg: string; fg: string }> = {
+    faible: { bg: "rgba(34,197,94,.15)", fg: "#22c55e" },
+    modéré: { bg: "rgba(59,130,246,.15)", fg: "#3b82f6" },
+    élevé: { bg: "rgba(249,115,22,.15)", fg: "#f97316" },
+    "très élevé": { bg: "rgba(239,68,68,.15)", fg: "#ef4444" },
+    indéterminé: { bg: "rgba(148,163,184,.15)", fg: "#94a3b8" },
+};
+
+function MetricCell({
+    label,
+    value,
+    tone,
+    hint,
+}: {
+    label: string;
+    value: string;
+    tone?: "pos" | "neg";
+    hint?: string;
+}) {
+    const color = tone === "pos" ? "#22c55e" : tone === "neg" ? "#ef4444" : undefined;
+    return (
+        <div style={{ background: "rgba(255,255,255,.03)", borderRadius: 12, padding: "12px 14px" }}>
+            <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 4 }}>{label}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color }}>{value}</div>
+            {hint && <div style={{ fontSize: 11, opacity: 0.5, marginTop: 2 }}>{hint}</div>}
+        </div>
+    );
+}
 
 function SliderField({
     label,
@@ -280,6 +310,91 @@ export default function DCASimulator() {
                                         vs Livret A
                                     </span>
                                 </div>
+                            </div>
+
+                            <div className="glass" style={{ padding: 20, borderRadius: 16 }}>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        marginBottom: 14,
+                                        flexWrap: "wrap",
+                                        gap: 8,
+                                    }}
+                                >
+                                    <h2 className="section-title" style={{ margin: 0 }}>
+                                        Profil de risque de l'actif
+                                    </h2>
+                                    <span
+                                        style={{
+                                            padding: "4px 14px",
+                                            borderRadius: 999,
+                                            fontSize: 13,
+                                            fontWeight: 600,
+                                            textTransform: "capitalize",
+                                            ...(RISK_COLORS[result.metriques_risque.profil_risque] ??
+                                                RISK_COLORS["indéterminé"]),
+                                        }}
+                                    >
+                                        Risque {result.metriques_risque.profil_risque}
+                                    </span>
+                                </div>
+                                <div
+                                    style={{
+                                        display: "grid",
+                                        gridTemplateColumns:
+                                            "repeat(auto-fit, minmax(120px, 1fr))",
+                                        gap: 12,
+                                    }}
+                                >
+                                    <MetricCell
+                                        label="Volatilité (annualisée)"
+                                        value={fmtRatioPct(
+                                            result.metriques_risque.volatilite_annualisee,
+                                        ).replace("+", "")}
+                                    />
+                                    <MetricCell
+                                        label="Ratio de Sharpe"
+                                        value={result.metriques_risque.sharpe.toFixed(2)}
+                                        hint="rendement / risque"
+                                    />
+                                    <MetricCell
+                                        label="Ratio de Sortino"
+                                        value={result.metriques_risque.sortino.toFixed(2)}
+                                        hint="risque baissier"
+                                    />
+                                    <MetricCell
+                                        label="Max drawdown"
+                                        value={fmtRatioPct(
+                                            result.metriques_risque.max_drawdown,
+                                        )}
+                                        tone="neg"
+                                        hint="pire pic → creux"
+                                    />
+                                    <MetricCell
+                                        label="Meilleur mois"
+                                        value={fmtRatioPct(
+                                            result.metriques_risque.meilleur_mois,
+                                        )}
+                                        tone="pos"
+                                    />
+                                    <MetricCell
+                                        label="Pire mois"
+                                        value={fmtRatioPct(result.metriques_risque.pire_mois)}
+                                        tone="neg"
+                                    />
+                                </div>
+                                <p
+                                    style={{
+                                        fontSize: 12,
+                                        opacity: 0.55,
+                                        marginTop: 12,
+                                        marginBottom: 0,
+                                    }}
+                                >
+                                    {result.metriques_risque.note}
+                                </p>
                             </div>
 
                             <div

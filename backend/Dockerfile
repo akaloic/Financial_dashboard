@@ -1,20 +1,18 @@
-# Utiliser une image Python officielle légère
+# Image Python officielle légère
 FROM python:3.11-slim
 
-# Définir le répertoire de travail dans le conteneur
 WORKDIR /app
 
-# Copier uniquement le fichier des dépendances en premier (pour optimiser le cache Docker)
+# Dépendances d'abord (cache Docker)
 COPY requirements.txt .
-
-# Installer les dépendances
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier tout le reste du code source
+# Code source
 COPY . .
 
-# Exposer le port sur lequel l'API va tourner
+# Le port est fourni par la plateforme via $PORT (Render, HF Spaces, Fly…),
+# avec repli sur 8000 en local. Forme shell pour que la variable soit interprétée.
+ENV PORT=8000
 EXPOSE 8000
 
-# Commande pour démarrer l'application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]

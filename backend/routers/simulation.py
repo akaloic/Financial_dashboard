@@ -7,9 +7,15 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.etf import ETF
 from models.simulation import ResultatSimulation, Simulation
-from schemas.simulation import ResultatMensuel, SimulationRequest, SimulationResponse
+from schemas.simulation import (
+    MetriquesRisque,
+    ResultatMensuel,
+    SimulationRequest,
+    SimulationResponse,
+)
 from services.dca_engine import compute_cagr, compute_livret_a, run_dca_simulation
 from services.etf_fetcher import get_historique_by_dates, get_or_create_etf
+from services.metrics import compute_risk_metrics
 
 router = APIRouter()
 
@@ -44,6 +50,8 @@ def _build_response(simulation: Simulation, resultats: list, etf_ticker: str) ->
     cagr_net = round(compute_cagr(valeur_finale_nette, capital_total, nb_annees), 6)
     valeur_livret_a = compute_livret_a(simulation.capital_initial, simulation.versement_mensuel, len(mensuels))
 
+    metriques = MetriquesRisque(**compute_risk_metrics([m.prix_cloture for m in mensuels]))
+
     return SimulationResponse(
         simulation_id=simulation.id,
         etf_ticker=etf_ticker,
@@ -56,6 +64,7 @@ def _build_response(simulation: Simulation, resultats: list, etf_ticker: str) ->
         cagr_brut=cagr_brut,
         cagr_net=cagr_net,
         valeur_livret_a=valeur_livret_a,
+        metriques_risque=metriques,
         resultats_mensuels=mensuels,
     )
 

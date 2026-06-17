@@ -29,6 +29,17 @@ class ResultatMensuel(BaseModel):
     capital_investi: float
 
 
+class MetriquesRisque(BaseModel):
+    volatilite_annualisee: float
+    sharpe: float
+    sortino: float
+    max_drawdown: float
+    meilleur_mois: float
+    pire_mois: float
+    profil_risque: str
+    note: str
+
+
 class SimulationResponse(BaseModel):
     simulation_id: int
     etf_ticker: str
@@ -41,4 +52,5 @@ class SimulationResponse(BaseModel):
     cagr_brut: float
     cagr_net: float
     valeur_livret_a: float
+    metriques_risque: MetriquesRisque
     resultats_mensuels: List[ResultatMensuel]

@@ -9,3 +9,7 @@ dist/
 # Local env & test artifacts
 .env.local
 .coverage
+
+# SQLite runtime (recréé au démarrage depuis le snapshot)
+*.db
+

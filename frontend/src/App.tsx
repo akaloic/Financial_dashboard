@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { BarChart2, TrendingUp, Activity, BookOpen, Layers } from 'lucide-react'
 import { useLiquidGlass } from './hooks/useLiquidGlass'
+import ApiBanner from './components/ApiBanner'
 import ETFExplorer from './pages/ModuleA/ETFExplorer'
 import DCASimulator from './pages/ModuleB/DCASimulator'
 import OLSRegression from './pages/ModuleC/OLSRegression'
@@ -70,6 +71,8 @@ export default function App() {
           </nav>
         </div>
       </header>
+
+      <ApiBanner />
 
       <main className="app-main">
         {TABS.map(({ id }) => (

@@ -1,0 +1,32 @@
+# Blueprint Render — déploiement 1-clic du backend FastAPI.
+#
+# Sur https://render.com :  New +  →  Blueprint  →  connecter ce dépôt GitHub.
+# Render lit ce fichier et provisionne le service.
+#
+# Aucune base externe nécessaire : sans DATABASE_URL, l'app tombe sur SQLite et
+# amorce de vraies données depuis le snapshot embarqué (backend/data/…csv.gz).
+# Pour brancher une vraie base PostgreSQL gratuite (recommandé en prod), créer une
+# base Neon (https://neon.tech) et définir DATABASE_URL dans les variables du service.
+
+services:
+  - type: web
+    name: portefeuille-passif-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: ENVIRONMENT
+        value: production
+      # Origines autorisées (CORS). Pré-réglé sur GitHub Pages + dev local.
+      # À ajuster si le frontend est hébergé ailleurs.
+      - key: CORS_ORIGINS
+        value: "https://akaloic.github.io,http://localhost:5173"
+      # Pour PostgreSQL (Neon/Railway), décommenter et renseigner dans le dashboard :
+      # - key: DATABASE_URL
+      #   sync: false
