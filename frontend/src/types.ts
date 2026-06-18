@@ -119,4 +119,4 @@ export interface RegressionResponse {
   projection: ProjectionPoint[];
 }
 
-export type TabId = 'explorer' | 'dca' | 'ols' | 'doc';
+export type TabId = 'overview' | 'explorer' | 'dca' | 'ols' | 'doc';
