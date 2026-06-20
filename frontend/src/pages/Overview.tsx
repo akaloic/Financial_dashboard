@@ -34,7 +34,7 @@ function MarketCard({ etf, onClick }: { etf: (typeof SHOWCASE)[number]; onClick:
         </div>
         <div className={`ov-chip ${(p1y ?? 0) >= 0 ? "up" : "down"}`}>
           {(p1y ?? 0) >= 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
-          {p1y != null ? pctStr(p1y) : "—"}
+          {p1y != null ? pctStr(p1y) : "-"}
         </div>
       </div>
       <div className="ov-market-spark">
@@ -51,7 +51,7 @@ function MarketCard({ etf, onClick }: { etf: (typeof SHOWCASE)[number]; onClick:
 const MODULES: { tab: TabId; Icon: typeof BarChart2; title: string; desc: string }[] = [
   { tab: "explorer", Icon: BarChart2, title: "Explorer les ETF", desc: "Recherche, fiche détaillée et historique de cours sur 1 / 3 / 10 ans." },
   { tab: "dca", Icon: TrendingUp, title: "Simulateur DCA", desc: "Backteste un investissement programmé et compare au Livret A, avec profil de risque." },
-  { tab: "ols", Icon: Activity, title: "Régression OLS", desc: "Tendance linéaire, R², Durbin-Watson et projection — avec les bons avertissements." },
+  { tab: "ols", Icon: Activity, title: "Régression OLS", desc: "Tendance linéaire, R², Durbin-Watson et projection, avec les bons avertissements." },
 ];
 
 export default function Overview({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
@@ -80,7 +80,7 @@ export default function Overview({ onNavigate }: { onNavigate: (tab: TabId) => v
           </h1>
           <p className="ov-lead">
             Explore les ETF, backteste ta stratégie d'investissement programmé et analyse les
-            tendances — sur des cours réels, gratuitement. Sans jargon, sans frais cachés.
+            tendances, sur des cours réels, gratuitement. Sans jargon, sans frais cachés.
           </p>
           <div className="ov-cta-row">
             <button className="ov-btn ov-btn-primary" onClick={() => onNavigate("dca")}>
@@ -93,7 +93,7 @@ export default function Overview({ onNavigate }: { onNavigate: (tab: TabId) => v
           <div className="ov-hero-stats">
             <div className="ov-hstat">
               <div className="ov-hstat-val" style={{ color: ACCENT }}>
-                {heroAll != null ? pctStr(heroAll) : "—"}
+                {heroAll != null ? pctStr(heroAll) : "-"}
               </div>
               <div className="ov-hstat-lbl">MSCI World · 10 ans</div>
             </div>
@@ -118,7 +118,7 @@ export default function Overview({ onNavigate }: { onNavigate: (tab: TabId) => v
               <div className="ov-hero-card-val">{eur(heroLast)}</div>
               <div className={`ov-chip ${(heroAll ?? 0) >= 0 ? "up" : "down"}`}>
                 {(heroAll ?? 0) >= 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
-                {heroAll != null ? pctStr(heroAll) : "—"}
+                {heroAll != null ? pctStr(heroAll) : "-"}
               </div>
             </div>
           </div>
@@ -131,7 +131,7 @@ export default function Overview({ onNavigate }: { onNavigate: (tab: TabId) => v
                   className="ov-hero-perf-val"
                   style={{ color: (p.v ?? 0) >= 0 ? ACCENT : DOWN }}
                 >
-                  {p.v != null ? pctStr(p.v) : "—"}
+                  {p.v != null ? pctStr(p.v) : "-"}
                 </span>
               </div>
             ))}

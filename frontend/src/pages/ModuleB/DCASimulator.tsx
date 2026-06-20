@@ -155,7 +155,7 @@ export default function DCASimulator() {
                         >
                             {etfs.map((e) => (
                                 <option key={e.ticker} value={e.ticker}>
-                                    {e.ticker} — {e.nom || e.indice || ""}
+                                    {e.ticker} · {e.nom || e.indice || ""}
                                 </option>
                             ))}
                         </select>

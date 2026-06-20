@@ -8,21 +8,21 @@ export default function Documentation() {
 
       <div className="doc-grid">
         <section className="glass doc-card">
-          <h2 className="doc-section-title">◎ Module A — Explorateur ETF</h2>
+          <h2 className="doc-section-title">◎ Module A · Explorateur ETF</h2>
           <p>
             Recherchez les ETF disponibles depuis la base de données locale, enrichie via
             <code>yfinance</code>. Les cours historiques sont mis en cache 24h pour limiter les
             appels API. Trois périodes sont disponibles : 1 an, 3 ans, 10 ans.
           </p>
           <ul>
-            <li><strong>GET /etf/</strong> — recherche par ticker, nom ou indice</li>
-            <li><strong>GET /etf/{'{ticker}'}/historique?period=1y</strong> — OHLCV + adj_close</li>
-            <li><strong>GET /etf/{'{ticker}'}</strong> — métadonnées ETF</li>
+            <li><strong>GET /etf/</strong> : recherche par ticker, nom ou indice</li>
+            <li><strong>GET /etf/{'{ticker}'}/historique?period=1y</strong> : OHLCV + adj_close</li>
+            <li><strong>GET /etf/{'{ticker}'}</strong> : métadonnées ETF</li>
           </ul>
         </section>
 
         <section className="glass doc-card">
-          <h2 className="doc-section-title">◈ Module B — Simulateur DCA</h2>
+          <h2 className="doc-section-title">◈ Module B · Simulateur DCA</h2>
           <p>
             Le <em>Dollar-Cost Averaging</em> (investissement programmé) consiste à investir
             un montant fixe chaque mois, quel que soit le prix. Cette stratégie réduit
@@ -37,23 +37,23 @@ export default function Documentation() {
           </ul>
           <h3>Métriques calculées</h3>
           <ul>
-            <li><strong>CAGR</strong> — taux de croissance annuel composé</li>
-            <li><strong>Gain net</strong> — valeur nette finale − capital total investi</li>
+            <li><strong>CAGR</strong> : taux de croissance annuel composé</li>
+            <li><strong>Gain net</strong> : valeur nette finale − capital total investi</li>
           </ul>
         </section>
 
         <section className="glass doc-card">
-          <h2 className="doc-section-title">◇ Module C — Régression OLS</h2>
+          <h2 className="doc-section-title">◇ Module C · Régression OLS</h2>
           <p>
             La régression linéaire ordinaire (OLS) modélise la tendance long-terme d'un ETF :
             <code>Prix = β₀ + β₁ × t + ε</code>
           </p>
           <h3>Indicateurs statistiques</h3>
           <ul>
-            <li><strong>R²</strong> — proportion de la variance expliquée par le modèle</li>
-            <li><strong>p-valeur</strong> — probabilité d'observer β₁ si la tendance est nulle</li>
-            <li><strong>Durbin-Watson</strong> — détection d'autocorrélation des résidus (≈2 = OK)</li>
-            <li><strong>IC 95%</strong> — intervalle de confiance à 95% de la droite OLS</li>
+            <li><strong>R²</strong> : proportion de la variance expliquée par le modèle</li>
+            <li><strong>p-valeur</strong> : probabilité d'observer β₁ si la tendance est nulle</li>
+            <li><strong>Durbin-Watson</strong> : détection d'autocorrélation des résidus (≈2 = OK)</li>
+            <li><strong>IC 95%</strong> : intervalle de confiance à 95% de la droite OLS</li>
           </ul>
           <h3>Limites importantes</h3>
           <p>

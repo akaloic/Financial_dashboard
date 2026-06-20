@@ -19,9 +19,9 @@ function ETFCard({ etf, selected, onClick }: { etf: ETFResponse; selected: boole
         <span className="etf-ticker">{etf.ticker}</span>
         {etf.eligible_pea && <span className="badge badge-pea">PEA</span>}
       </div>
-      <div className="etf-card-name">{etf.nom || '—'}</div>
+      <div className="etf-card-name">{etf.nom || '-'}</div>
       <div className="etf-card-meta">
-        <span>{etf.indice || '—'}</span>
+        <span>{etf.indice || '-'}</span>
         {etf.ter != null && <span className="etf-ter">TER {(etf.ter * 100).toFixed(2)}%</span>}
       </div>
     </button>
@@ -159,16 +159,16 @@ export default function ETFExplorer() {
           <div className="etf-detail-grid">
             <div className="detail-item">
               <span className="detail-label">Gestionnaire</span>
-              <span className="detail-value">{selected.gestionnaire || '—'}</span>
+              <span className="detail-value">{selected.gestionnaire || '-'}</span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Indice</span>
-              <span className="detail-value">{selected.indice || '—'}</span>
+              <span className="detail-value">{selected.indice || '-'}</span>
             </div>
             <div className="detail-item">
               <span className="detail-label">TER</span>
               <span className="detail-value">
-                {selected.ter != null ? `${(selected.ter * 100).toFixed(2)}%` : '—'}
+                {selected.ter != null ? `${(selected.ter * 100).toFixed(2)}%` : '-'}
               </span>
             </div>
             <div className="detail-item">
@@ -177,14 +177,14 @@ export default function ETFExplorer() {
             </div>
             <div className="detail-item">
               <span className="detail-label">Devise</span>
-              <span className="detail-value">{selected.devise || '—'}</span>
+              <span className="detail-value">{selected.devise || '-'}</span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Dernier cours</span>
               <span className="detail-value">
                 {selected.derniere_date_cours
                   ? new Date(selected.derniere_date_cours).toLocaleDateString('fr-FR')
-                  : '—'}
+                  : '-'}
               </span>
             </div>
           </div>

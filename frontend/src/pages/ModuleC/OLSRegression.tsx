@@ -75,7 +75,7 @@ export default function OLSRegression() {
             <select className="form-select" value={ticker} onChange={e => setTicker(e.target.value)}>
               {etfs.map(e => (
                 <option key={e.ticker} value={e.ticker}>
-                  {e.ticker} — {e.nom || e.indice || ''}
+                  {e.ticker} · {e.nom || e.indice || ''}
                 </option>
               ))}
             </select>
@@ -137,7 +137,7 @@ export default function OLSRegression() {
             />
             <StatCard
               label="Durbin-Watson"
-              value={result.durbin_watson != null ? fmtNum(result.durbin_watson, 3) : '—'}
+              value={result.durbin_watson != null ? fmtNum(result.durbin_watson, 3) : '-'}
               sub="Autocorrélation résidus (cible: ~2)"
             />
             <StatCard
