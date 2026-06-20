@@ -3,6 +3,7 @@ import { searchETFs } from '../../api/etf'
 import { runRegression } from '../../api/regression'
 import OLSChart from '../../components/charts/OLSChart'
 import ResidualsChart from '../../components/charts/ResidualsChart'
+import { useT } from '../../i18n'
 import type { ETFResponse, RegressionResponse } from '../../types'
 
 const fmtNum = (v: number, d = 4) => v.toFixed(d)
@@ -18,6 +19,7 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
 }
 
 export default function OLSRegression() {
+  const t = useT()
   const [etfs, setEtfs] = useState<ETFResponse[]>([])
   const [ticker, setTicker] = useState('')
   const [dateDebut, setDateDebut] = useState('2015-01-01')
@@ -61,17 +63,16 @@ export default function OLSRegression() {
   return (
     <div className="module-layout">
       <div className="module-hero">
-        <h1 className="hero-title">Régression OLS</h1>
+        <h1 className="hero-title">{t('Régression OLS')}</h1>
         <p className="hero-sub">
-          Analyse statistique de la tendance historique d'un ETF par régression linéaire ordinaire (Ordinary Least Squares)
-          avec intervalles de confiance à 95% et projection à 12 mois.
+          {t("Analyse statistique de la tendance historique d'un ETF par régression linéaire ordinaire (Ordinary Least Squares) avec intervalles de confiance à 95% et projection à 12 mois.")}
         </p>
       </div>
 
       <div className="ols-controls glass">
         <div className="ols-controls-inner">
           <div className="form-group" style={{ flex: 2 }}>
-            <label className="form-label">ETF analysé</label>
+            <label className="form-label">{t('ETF analysé')}</label>
             <select className="form-select" value={ticker} onChange={e => setTicker(e.target.value)}>
               {etfs.map(e => (
                 <option key={e.ticker} value={e.ticker}>
@@ -81,17 +82,17 @@ export default function OLSRegression() {
             </select>
           </div>
           <div className="form-group">
-            <label className="form-label">Date de début</label>
+            <label className="form-label">{t('Date de début')}</label>
             <input type="date" className="form-input" value={dateDebut} min="2000-01-01" max={dateFin}
               onChange={e => setDateDebut(e.target.value)} />
           </div>
           <div className="form-group">
-            <label className="form-label">Date de fin</label>
+            <label className="form-label">{t('Date de fin')}</label>
             <input type="date" className="form-input" value={dateFin} min={dateDebut} max="2025-12-31"
               onChange={e => setDateFin(e.target.value)} />
           </div>
           <button className="btn-primary" onClick={handleRun} disabled={loading || !ticker}>
-            {loading ? 'Calcul…' : 'Analyser'}
+            {loading ? t('Calcul…') : t('Analyser')}
           </button>
         </div>
 
@@ -101,7 +102,7 @@ export default function OLSRegression() {
       {!result && !loading && (
         <div className="empty-state glass">
           <span className="empty-icon">◇</span>
-          <p>Sélectionnez un ETF et une période, puis lancez l'analyse.</p>
+          <p>{t("Sélectionnez un ETF et une période, puis lancez l'analyse.")}</p>
         </div>
       )}
 
@@ -115,55 +116,54 @@ export default function OLSRegression() {
       {result && (
         <>
           <div className="warning-box ols-warning">
-            <strong>⚠ Avertissement statistique :</strong>{' '}
+            <strong>{t('⚠ Avertissement statistique :')}</strong>{' '}
             {result.interpretation.avertissement}
           </div>
 
           <div className="ols-stats-grid">
             <StatCard
-              label="R² (coefficient de détermination)"
+              label={t('R² (coefficient de détermination)')}
               value={fmtNum(result.r_squared, 4)}
-              sub={`Qualité : ${r2Quality(result.r_squared).label}`}
+              sub={`${t('Qualité :')} ${t(r2Quality(result.r_squared).label)}`}
             />
             <StatCard
-              label="p-valeur (significativité)"
+              label={t('p-valeur (significativité)')}
               value={pValueFmt(result.p_value)}
-              sub={result.p_value < 0.05 ? 'Significatif (< 0.05)' : 'Non significatif'}
+              sub={result.p_value < 0.05 ? t('Significatif (< 0.05)') : t('Non significatif')}
             />
             <StatCard
-              label="β₁ (tendance journalière)"
+              label={t('β₁ (tendance journalière)')}
               value={`${result.beta1 >= 0 ? '+' : ''}${fmtNum(result.beta1, 4)}€`}
               sub={`${result.interpretation.tendance_journaliere_euros >= 0 ? '+' : ''}${result.interpretation.tendance_journaliere_euros.toFixed(4)}€/j`}
             />
             <StatCard
               label="Durbin-Watson"
               value={result.durbin_watson != null ? fmtNum(result.durbin_watson, 3) : '-'}
-              sub="Autocorrélation résidus (cible: ~2)"
+              sub={t('Autocorrélation résidus (cible: ~2)')}
             />
             <StatCard
-              label="Erreur standard"
+              label={t('Erreur standard')}
               value={`${fmtNum(result.std_error, 4)}€`}
-              sub={`${result.nb_observations} observations`}
+              sub={`${result.nb_observations} ${t('observations')}`}
             />
             <StatCard
-              label="β₀ (constante)"
+              label={t('β₀ (constante)')}
               value={`${fmtNum(result.beta0, 2)}€`}
-              sub={`Intercept OLS`}
+              sub={t('Intercept OLS')}
             />
           </div>
 
           <div className="glass-strong" style={{ padding: 24, borderRadius: 16 }}>
             <h3 className="section-title" style={{ marginBottom: 16 }}>
-              Droite de régression + IC 95% + Projection 12M
+              {t('Droite de régression + IC 95% + Projection 12M')}
             </h3>
             <OLSChart historique={result.donnees_historiques} projection={result.projection} />
           </div>
 
           <div className="glass" style={{ padding: 24, borderRadius: 16 }}>
-            <h3 className="section-title" style={{ marginBottom: 12 }}>Résidus</h3>
+            <h3 className="section-title" style={{ marginBottom: 12 }}>{t('Résidus')}</h3>
             <p className="section-sub">
-              Les résidus doivent être aléatoirement distribués autour de zéro sans structure.
-              Un motif systématique indique une hétéroscédasticité.
+              {t('Les résidus doivent être aléatoirement distribués autour de zéro sans structure. Un motif systématique indique une hétéroscédasticité.')}
             </p>
             <ResidualsChart data={result.donnees_historiques} />
           </div>

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { searchETFs } from "../../api/etf";
 import { runSimulation } from "../../api/simulation";
 import DCAChart from "../../components/charts/DCAChart";
+import { useT } from "../../i18n";
 import type { ETFResponse, SimulationResponse } from "../../types";
 
 const fmt = (v: number, decimals = 0) =>
@@ -89,6 +90,7 @@ function SliderField({
 }
 
 export default function DCASimulator() {
+    const t = useT();
     const [etfs, setEtfs] = useState<ETFResponse[]>([]);
     const [ticker, setTicker] = useState("");
     const [capital, setCapital] = useState(1000);
@@ -135,19 +137,18 @@ export default function DCASimulator() {
     return (
         <div className="module-layout">
             <div className="module-hero">
-                <h1 className="hero-title">Simulateur DCA</h1>
+                <h1 className="hero-title">{t("Simulateur DCA")}</h1>
                 <p className="hero-sub">
-                    Simulez une stratégie d'investissement programmé mensuel
-                    (Dollar-Cost Averaging) en backtesting sur données réelles.
+                    {t("Simulez une stratégie d'investissement programmé mensuel (Dollar-Cost Averaging) en backtesting sur données réelles.")}
                 </p>
             </div>
 
             <div className="dca-layout">
                 <div className="dca-controls glass">
-                    <h2 className="section-title">Paramètres</h2>
+                    <h2 className="section-title">{t("Paramètres")}</h2>
 
                     <div className="form-group">
-                        <label className="form-label">ETF cible</label>
+                        <label className="form-label">{t("ETF cible")}</label>
                         <select
                             className="form-select"
                             value={ticker}
@@ -162,7 +163,7 @@ export default function DCASimulator() {
                     </div>
 
                     <SliderField
-                        label="Capital initial"
+                        label={t("Capital initial")}
                         value={capital}
                         min={0}
                         max={50000}
@@ -172,7 +173,7 @@ export default function DCASimulator() {
                     />
 
                     <SliderField
-                        label="Versement mensuel"
+                        label={t("Versement mensuel")}
                         value={versement}
                         min={50}
                         max={2000}
@@ -183,7 +184,7 @@ export default function DCASimulator() {
 
                     <div className="form-row">
                         <div className="form-group">
-                            <label className="form-label">Date de début</label>
+                            <label className="form-label">{t("Date de début")}</label>
                             <input
                                 type="date"
                                 className="form-input"
@@ -194,7 +195,7 @@ export default function DCASimulator() {
                             />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Date de fin</label>
+                            <label className="form-label">{t("Date de fin")}</label>
                             <input
                                 type="date"
                                 className="form-input"
@@ -208,11 +209,11 @@ export default function DCASimulator() {
 
                     {selectedETF?.ter != null && (
                         <div className="form-info">
-                            TER appliqué :{" "}
+                            {t("TER appliqué :")}{" "}
                             <strong>
                                 {(selectedETF.ter * 100).toFixed(2)}%
                             </strong>
-                            /an (prélevé mensuellement)
+                            {t("/an (prélevé mensuellement)")}
                         </div>
                     )}
 
@@ -221,7 +222,7 @@ export default function DCASimulator() {
                         onClick={handleRun}
                         disabled={loading || !ticker}
                     >
-                        {loading ? "Calcul en cours…" : "Lancer la simulation"}
+                        {loading ? t("Calcul en cours…") : t("Lancer la simulation")}
                     </button>
 
                     {error && <div className="warning-box">{error}</div>}
@@ -231,10 +232,7 @@ export default function DCASimulator() {
                     {!result && !loading && (
                         <div className="empty-state glass">
                             <span className="empty-icon">◈</span>
-                            <p>
-                                Configurez vos paramètres et lancez la
-                                simulation pour voir les résultats.
-                            </p>
+                            <p>{t("Configurez vos paramètres et lancez la simulation pour voir les résultats.")}</p>
                         </div>
                     )}
 
@@ -257,36 +255,35 @@ export default function DCASimulator() {
                             <div className="kpi-grid">
                                 <div className="kpi-card glass">
                                     <span className="kpi-label">
-                                        Valeur finale nette
+                                        {t("Valeur finale nette")}
                                     </span>
                                     <span className="kpi-value kpi-primary">
                                         {fmt(result.valeur_finale_nette)}
                                     </span>
                                     <span className="kpi-sub">
-                                        {fmtPct(result.gain_net_pct)} de gain
-                                        net
+                                        {fmtPct(result.gain_net_pct)} {t("de gain net")}
                                     </span>
                                 </div>
                                 <div className="kpi-card glass">
                                     <span className="kpi-label">
-                                        Capital investi
+                                        {t("Capital investi")}
                                     </span>
                                     <span className="kpi-value">
                                         {fmt(result.capital_total_investi)}
                                     </span>
                                     <span className="kpi-sub">
-                                        {result.nb_mois} versements
+                                        {result.nb_mois} {t("versements")}
                                     </span>
                                 </div>
                                 <div className="kpi-card glass">
-                                    <span className="kpi-label">Gain net</span>
+                                    <span className="kpi-label">{t("Gain net")}</span>
                                     <span
                                         className={`kpi-value ${result.gain_net_euros >= 0 ? "kpi-pos" : "kpi-neg"}`}
                                     >
                                         {fmt(result.gain_net_euros)}
                                     </span>
                                     <span className="kpi-sub">
-                                        CAGR net{" "}
+                                        {t("CAGR net")}{" "}
                                         {(result.cagr_net * 100).toFixed(2)}%/an
                                     </span>
                                 </div>
@@ -324,7 +321,7 @@ export default function DCASimulator() {
                                     }}
                                 >
                                     <h2 className="section-title" style={{ margin: 0 }}>
-                                        Profil de risque de l'actif
+                                        {t("Profil de risque de l'actif")}
                                     </h2>
                                     <span
                                         style={{
@@ -337,7 +334,7 @@ export default function DCASimulator() {
                                                 RISK_COLORS["indéterminé"]),
                                         }}
                                     >
-                                        Risque {result.metriques_risque.profil_risque}
+                                        {t("Risque")} {t(result.metriques_risque.profil_risque)}
                                     </span>
                                 </div>
                                 <div
@@ -349,38 +346,38 @@ export default function DCASimulator() {
                                     }}
                                 >
                                     <MetricCell
-                                        label="Volatilité (annualisée)"
+                                        label={t("Volatilité (annualisée)")}
                                         value={fmtRatioPct(
                                             result.metriques_risque.volatilite_annualisee,
                                         ).replace("+", "")}
                                     />
                                     <MetricCell
-                                        label="Ratio de Sharpe"
+                                        label={t("Ratio de Sharpe")}
                                         value={result.metriques_risque.sharpe.toFixed(2)}
-                                        hint="rendement / risque"
+                                        hint={t("rendement / risque")}
                                     />
                                     <MetricCell
-                                        label="Ratio de Sortino"
+                                        label={t("Ratio de Sortino")}
                                         value={result.metriques_risque.sortino.toFixed(2)}
-                                        hint="risque baissier"
+                                        hint={t("risque baissier")}
                                     />
                                     <MetricCell
-                                        label="Max drawdown"
+                                        label={t("Max drawdown")}
                                         value={fmtRatioPct(
                                             result.metriques_risque.max_drawdown,
                                         )}
                                         tone="neg"
-                                        hint="pire pic → creux"
+                                        hint={t("pire pic → creux")}
                                     />
                                     <MetricCell
-                                        label="Meilleur mois"
+                                        label={t("Meilleur mois")}
                                         value={fmtRatioPct(
                                             result.metriques_risque.meilleur_mois,
                                         )}
                                         tone="pos"
                                     />
                                     <MetricCell
-                                        label="Pire mois"
+                                        label={t("Pire mois")}
                                         value={fmtRatioPct(result.metriques_risque.pire_mois)}
                                         tone="neg"
                                     />
@@ -419,8 +416,8 @@ export default function DCASimulator() {
                                     onClick={() => setShowTable((v) => !v)}
                                 >
                                     {showTable
-                                        ? "▲ Masquer le tableau détaillé"
-                                        : "▼ Voir le tableau détaillé"}
+                                        ? t("▲ Masquer le tableau détaillé")
+                                        : t("▼ Voir le tableau détaillé")}
                                 </button>
 
                                 {showTable && (
@@ -431,14 +428,14 @@ export default function DCASimulator() {
                                         <table className="data-table">
                                             <thead>
                                                 <tr>
-                                                    <th>Mois</th>
-                                                    <th>Date</th>
-                                                    <th>Prix clôture</th>
-                                                    <th>Parts achetées</th>
-                                                    <th>Parts cumulées</th>
-                                                    <th>Valeur brute</th>
-                                                    <th>Valeur nette</th>
-                                                    <th>Capital investi</th>
+                                                    <th>{t("Mois")}</th>
+                                                    <th>{t("Date")}</th>
+                                                    <th>{t("Prix clôture")}</th>
+                                                    <th>{t("Parts achetées")}</th>
+                                                    <th>{t("Parts cumulées")}</th>
+                                                    <th>{t("Valeur brute")}</th>
+                                                    <th>{t("Valeur nette")}</th>
+                                                    <th>{t("Capital investi")}</th>
                                                 </tr>
                                             </thead>
                                             <tbody>

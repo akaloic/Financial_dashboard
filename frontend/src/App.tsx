@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { LayoutDashboard, BarChart2, TrendingUp, Activity, BookOpen, Layers } from 'lucide-react'
 import { useLiquidGlass } from './hooks/useLiquidGlass'
+import { useT, LangToggle } from './i18n'
 import ApiBanner from './components/ApiBanner'
 import Overview from './pages/Overview'
 import ETFExplorer from './pages/ModuleA/ETFExplorer'
@@ -18,6 +19,7 @@ const NAV: { id: TabId; label: string; Icon: React.ElementType }[] = [
 ]
 
 export default function App() {
+  const t = useT()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   useLiquidGlass()
 
@@ -27,8 +29,8 @@ export default function App() {
         <div className="fin-brand">
           <div className="fin-brand-mark"><Layers size={18} strokeWidth={2} /></div>
           <div className="fin-brand-text">
-            <span className="fin-brand-name">Portefeuille</span>
-            <span className="fin-brand-tag">Passif</span>
+            <span className="fin-brand-name">{t('Portefeuille')}</span>
+            <span className="fin-brand-tag">{t('Passif')}</span>
           </div>
         </div>
 
@@ -41,12 +43,13 @@ export default function App() {
               aria-current={activeTab === id}
             >
               <Icon size={18} strokeWidth={1.9} className="fin-nav-icon" />
-              <span className="fin-nav-label">{label}</span>
+              <span className="fin-nav-label">{t(label)}</span>
             </button>
           ))}
         </nav>
 
         <div className="fin-sidebar-foot">
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><LangToggle /></div>
           <ApiBanner />
           <div className="fin-credit">M2 MIAGE · Projet DATA</div>
         </div>

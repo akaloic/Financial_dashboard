@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { searchETFs, getHistorique } from '../../api/etf'
 import PriceChart from '../../components/charts/PriceChart'
+import { useT } from '../../i18n'
 import type { ETFResponse, HistoriquePoint } from '../../types'
 
 const PERIODS = ['1y', '3y', '10y'] as const
@@ -29,6 +30,7 @@ function ETFCard({ etf, selected, onClick }: { etf: ETFResponse; selected: boole
 }
 
 export default function ETFExplorer() {
+  const t = useT()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<ETFResponse[]>([])
   const [selected, setSelected] = useState<ETFResponse | null>(null)
@@ -91,8 +93,8 @@ export default function ETFExplorer() {
   return (
     <div className="module-layout">
       <div className="module-hero">
-        <h1 className="hero-title">Explorer les ETF</h1>
-        <p className="hero-sub">Recherchez, comparez et analysez les ETF disponibles sur Euronext Paris.</p>
+        <h1 className="hero-title">{t('Explorer les ETF')}</h1>
+        <p className="hero-sub">{t('Recherchez, comparez et analysez les ETF disponibles sur Euronext Paris.')}</p>
       </div>
 
       <div className="search-bar glass">
@@ -100,7 +102,7 @@ export default function ETFExplorer() {
         <input
           className="search-input"
           type="text"
-          placeholder="Rechercher par ticker, nom, indice…"
+          placeholder={t('Rechercher par ticker, nom, indice…')}
           value={query}
           onChange={e => setQuery(e.target.value)}
           autoComplete="off"
@@ -121,7 +123,7 @@ export default function ETFExplorer() {
           />
         ))}
         {!loading && results.length === 0 && (
-          <div className="empty-state">Aucun ETF trouvé pour « {query} »</div>
+          <div className="empty-state">{t('Aucun ETF trouvé pour')} « {query} »</div>
         )}
       </div>
 
@@ -144,7 +146,7 @@ export default function ETFExplorer() {
                   className={`period-btn${period === p ? ' active' : ''}`}
                   onClick={() => handlePeriod(p)}
                 >
-                  {PERIOD_LABELS[p]}
+                  {t(PERIOD_LABELS[p])}
                 </button>
               ))}
             </div>
@@ -158,11 +160,11 @@ export default function ETFExplorer() {
 
           <div className="etf-detail-grid">
             <div className="detail-item">
-              <span className="detail-label">Gestionnaire</span>
+              <span className="detail-label">{t('Gestionnaire')}</span>
               <span className="detail-value">{selected.gestionnaire || '-'}</span>
             </div>
             <div className="detail-item">
-              <span className="detail-label">Indice</span>
+              <span className="detail-label">{t('Indice')}</span>
               <span className="detail-value">{selected.indice || '-'}</span>
             </div>
             <div className="detail-item">
@@ -172,15 +174,15 @@ export default function ETFExplorer() {
               </span>
             </div>
             <div className="detail-item">
-              <span className="detail-label">Éligible PEA</span>
-              <span className="detail-value">{selected.eligible_pea ? 'Oui' : 'Non'}</span>
+              <span className="detail-label">{t('Éligible PEA')}</span>
+              <span className="detail-value">{selected.eligible_pea ? t('Oui') : t('Non')}</span>
             </div>
             <div className="detail-item">
-              <span className="detail-label">Devise</span>
+              <span className="detail-label">{t('Devise')}</span>
               <span className="detail-value">{selected.devise || '-'}</span>
             </div>
             <div className="detail-item">
-              <span className="detail-label">Dernier cours</span>
+              <span className="detail-label">{t('Dernier cours')}</span>
               <span className="detail-value">
                 {selected.derniere_date_cours
                   ? new Date(selected.derniere_date_cours).toLocaleDateString('fr-FR')

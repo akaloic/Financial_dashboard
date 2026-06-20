@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getApiBase, setApiBase, pingApi } from "../api/client";
+import { useT } from "../i18n";
 
 type Status = "checking" | "ok" | "down";
 
@@ -11,6 +12,7 @@ type Status = "checking" | "ok" | "down";
  *   sans rebuild dès qu'un backend est en ligne.
  */
 export default function ApiBanner() {
+  const t = useT();
   const [status, setStatus] = useState<Status>("checking");
   const [url, setUrl] = useState(getApiBase());
   const [dismissed, setDismissed] = useState(false);
@@ -32,7 +34,7 @@ export default function ApiBanner() {
   if (status === "ok" || dismissed) {
     return (
       <div className={`api-dot api-dot-${status}`} title={`API : ${getApiBase() || "same-origin"}`}>
-        <span className="dot" /> {status === "ok" ? "API connectée" : "API ?"}
+        <span className="dot" /> {status === "ok" ? t("API connectée") : t("API ?")}
       </div>
     );
   }
@@ -40,7 +42,7 @@ export default function ApiBanner() {
   if (status === "checking") {
     return (
       <div className="api-dot api-dot-checking">
-        <span className="dot" /> Connexion à l'API…
+        <span className="dot" /> {t("Connexion à l'API…")}
       </div>
     );
   }
@@ -48,8 +50,8 @@ export default function ApiBanner() {
   return (
     <div className="api-banner">
       <div className="api-banner-text">
-        <strong>Backend non connecté.</strong> Colle l'URL de ton API déployée
-        (Render / Hugging Face) pour activer les calculs.
+        <strong>{t("Backend non connecté.")}</strong>{" "}
+        {t("Colle l'URL de ton API déployée (Render / Hugging Face) pour activer les calculs.")}
       </div>
       <div className="api-banner-actions">
         <input
@@ -61,10 +63,10 @@ export default function ApiBanner() {
           onKeyDown={(e) => e.key === "Enter" && connect()}
         />
         <button className="btn-primary" onClick={connect}>
-          Connecter
+          {t("Connecter")}
         </button>
         <button className="btn-ghost" onClick={() => setDismissed(true)}>
-          Ignorer
+          {t("Ignorer")}
         </button>
       </div>
     </div>

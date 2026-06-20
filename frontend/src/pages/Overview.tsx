@@ -1,6 +1,7 @@
 import { BarChart2, TrendingUp, Activity, ArrowRight, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { SHOWCASE } from "../data/showcase";
 import { HeroAreaChart, Sparkline } from "../components/charts/ShowcaseCharts";
+import { useT } from "../i18n";
 import type { TabId } from "../types";
 
 const ACCENT = "#3ddc97";
@@ -21,6 +22,7 @@ function perf(points: { c: number }[], monthsBack: number): number | null {
 }
 
 function MarketCard({ etf, onClick }: { etf: (typeof SHOWCASE)[number]; onClick: () => void }) {
+  const t = useT();
   const last = etf.points[etf.points.length - 1].c;
   const p1y = perf(etf.points, 12);
   const color = (p1y ?? 0) >= 0 ? ACCENT : DOWN;
@@ -42,7 +44,7 @@ function MarketCard({ etf, onClick }: { etf: (typeof SHOWCASE)[number]; onClick:
       </div>
       <div className="ov-market-foot">
         <span className="ov-market-price">{eur(last)}</span>
-        <span className="ov-market-cap">1 an</span>
+        <span className="ov-market-cap">{t("1 an")}</span>
       </div>
     </button>
   );
@@ -55,6 +57,7 @@ const MODULES: { tab: TabId; Icon: typeof BarChart2; title: string; desc: string
 ];
 
 export default function Overview({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
+  const t = useT();
   const hero = SHOWCASE.find((e) => e.hero) ?? SHOWCASE[0];
   const heroLast = hero.points[hero.points.length - 1].c;
   const heroAll = perf(hero.points, 0);
@@ -71,23 +74,22 @@ export default function Overview({ onNavigate }: { onNavigate: (tab: TabId) => v
       <section className="ov-hero">
         <div className="ov-hero-left">
           <div className="ov-eyebrow">
-            <span className="ov-pulse" /> Données réelles · {SHOWCASE.length} indices · 10 ans d'historique
+            <span className="ov-pulse" /> {t("Données réelles")} · {SHOWCASE.length} {t("indices")} · {t("10 ans d'historique")}
           </div>
           <h1 className="ov-title">
-            Investis passivement.
+            {t("Investis passivement.")}
             <br />
-            <span className="ov-title-accent">Décide avec des données.</span>
+            <span className="ov-title-accent">{t("Décide avec des données.")}</span>
           </h1>
           <p className="ov-lead">
-            Explore les ETF, backteste ta stratégie d'investissement programmé et analyse les
-            tendances, sur des cours réels, gratuitement. Sans jargon, sans frais cachés.
+            {t("Explore les ETF, backteste ta stratégie d'investissement programmé et analyse les tendances, sur des cours réels, gratuitement. Sans jargon, sans frais cachés.")}
           </p>
           <div className="ov-cta-row">
             <button className="ov-btn ov-btn-primary" onClick={() => onNavigate("dca")}>
-              Simuler mon investissement <ArrowRight size={17} />
+              {t("Simuler mon investissement")} <ArrowRight size={17} />
             </button>
             <button className="ov-btn ov-btn-ghost" onClick={() => onNavigate("explorer")}>
-              Explorer les ETF
+              {t("Explorer les ETF")}
             </button>
           </div>
           <div className="ov-hero-stats">
@@ -95,15 +97,15 @@ export default function Overview({ onNavigate }: { onNavigate: (tab: TabId) => v
               <div className="ov-hstat-val" style={{ color: ACCENT }}>
                 {heroAll != null ? pctStr(heroAll) : "-"}
               </div>
-              <div className="ov-hstat-lbl">MSCI World · 10 ans</div>
+              <div className="ov-hstat-lbl">{t("MSCI World · 10 ans")}</div>
             </div>
             <div className="ov-hstat">
               <div className="ov-hstat-val">0,07 %</div>
-              <div className="ov-hstat-lbl">TER à partir de</div>
+              <div className="ov-hstat-lbl">{t("TER à partir de")}</div>
             </div>
             <div className="ov-hstat">
               <div className="ov-hstat-val">PEA</div>
-              <div className="ov-hstat-lbl">Enveloppe éligible</div>
+              <div className="ov-hstat-lbl">{t("Enveloppe éligible")}</div>
             </div>
           </div>
         </div>
@@ -126,7 +128,7 @@ export default function Overview({ onNavigate }: { onNavigate: (tab: TabId) => v
           <div className="ov-hero-perfs">
             {heroPerfs.map((p) => (
               <div key={p.label} className="ov-hero-perf">
-                <span className="ov-hero-perf-lbl">{p.label}</span>
+                <span className="ov-hero-perf-lbl">{t(p.label)}</span>
                 <span
                   className="ov-hero-perf-val"
                   style={{ color: (p.v ?? 0) >= 0 ? ACCENT : DOWN }}
@@ -142,9 +144,9 @@ export default function Overview({ onNavigate }: { onNavigate: (tab: TabId) => v
       {/* ── MARCHÉS ── */}
       <section className="ov-section">
         <div className="ov-section-head">
-          <h2 className="ov-section-title">Les marchés en un coup d'œil</h2>
+          <h2 className="ov-section-title">{t("Les marchés en un coup d'œil")}</h2>
           <button className="ov-link" onClick={() => onNavigate("explorer")}>
-            Tout explorer <ArrowRight size={15} />
+            {t("Tout explorer")} <ArrowRight size={15} />
           </button>
         </div>
         <div className="ov-market-grid">
@@ -157,7 +159,7 @@ export default function Overview({ onNavigate }: { onNavigate: (tab: TabId) => v
       {/* ── OUTILS ── */}
       <section className="ov-section">
         <div className="ov-section-head">
-          <h2 className="ov-section-title">Tes outils</h2>
+          <h2 className="ov-section-title">{t("Tes outils")}</h2>
         </div>
         <div className="ov-module-grid">
           {MODULES.map(({ tab, Icon, title, desc }) => (
@@ -165,10 +167,10 @@ export default function Overview({ onNavigate }: { onNavigate: (tab: TabId) => v
               <div className="ov-module-icon">
                 <Icon size={22} strokeWidth={1.8} />
               </div>
-              <div className="ov-module-title">{title}</div>
-              <div className="ov-module-desc">{desc}</div>
+              <div className="ov-module-title">{t(title)}</div>
+              <div className="ov-module-desc">{t(desc)}</div>
               <div className="ov-module-cta">
-                Ouvrir <ArrowRight size={15} />
+                {t("Ouvrir")} <ArrowRight size={15} />
               </div>
             </button>
           ))}
