@@ -52,6 +52,24 @@ export default function App() {
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><LangToggle /></div>
           <ApiBanner />
           <div className="fin-credit">M2 MIAGE · Projet DATA</div>
+          <a
+            href="https://akaloic.github.io/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'block',
+              fontSize: 11,
+              color: 'var(--text-3)',
+              textDecoration: 'none',
+              padding: '6px 10px 10px',
+              opacity: 0.8,
+              transition: 'color 0.15s, opacity 0.15s',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = 'var(--primary)'; (e.currentTarget as HTMLAnchorElement).style.opacity = '1' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = 'var(--text-3)'; (e.currentTarget as HTMLAnchorElement).style.opacity = '0.8' }}
+          >
+            ↗ Portfolio · akaloic.github.io
+          </a>
         </div>
       </aside>
 
