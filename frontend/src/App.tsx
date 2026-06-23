@@ -29,7 +29,7 @@ export default function App() {
         <div className="fin-brand">
           <div className="fin-brand-mark"><Layers size={18} strokeWidth={2} /></div>
           <div className="fin-brand-text">
-            <span className="fin-brand-name">{t('Portefeuille')}</span>
+            <span className="fin-brand-name">FinSight</span>
             <span className="fin-brand-tag">{t('Passif')}</span>
           </div>
         </div>
