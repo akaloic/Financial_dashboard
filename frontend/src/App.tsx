@@ -57,18 +57,34 @@ export default function App() {
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              display: 'block',
-              fontSize: 11,
-              color: 'var(--text-3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 7,
+              margin: '10px 10px 4px',
+              padding: '9px 12px',
+              borderRadius: 8,
+              border: '1px solid var(--primary)',
+              background: 'rgba(61,220,151,0.08)',
+              color: 'var(--primary)',
+              fontSize: 12,
+              fontWeight: 600,
               textDecoration: 'none',
-              padding: '6px 10px 10px',
-              opacity: 0.8,
-              transition: 'color 0.15s, opacity 0.15s',
+              letterSpacing: '0.02em',
+              transition: 'background 0.15s, box-shadow 0.15s',
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = 'var(--primary)'; (e.currentTarget as HTMLAnchorElement).style.opacity = '1' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = 'var(--text-3)'; (e.currentTarget as HTMLAnchorElement).style.opacity = '0.8' }}
+            onMouseEnter={e => {
+              const el = e.currentTarget as HTMLAnchorElement
+              el.style.background = 'rgba(61,220,151,0.18)'
+              el.style.boxShadow = '0 0 14px rgba(61,220,151,0.25)'
+            }}
+            onMouseLeave={e => {
+              const el = e.currentTarget as HTMLAnchorElement
+              el.style.background = 'rgba(61,220,151,0.08)'
+              el.style.boxShadow = 'none'
+            }}
           >
-            ↗ Portfolio · akaloic.github.io
+            ↗ Voir le Portfolio
           </a>
         </div>
       </aside>
