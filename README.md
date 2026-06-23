@@ -1,5 +1,7 @@
 # Financial Dashboard — Projet Data
 
+> Projet présenté sur le **[Portfolio de Loïc Jiraud](https://akaloic.github.io/)**.
+
 Application composée d'une API backend (FastAPI) et d'un frontend (React/Vite).
 Ce README décrit comment lancer le projet en local sur macOS et Windows, ainsi
 que les URLs de déploiement.
